@@ -10,9 +10,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Linking,
 } from 'react-native';
 import { useWalletStore } from '../stores/walletStore';
 import { uploadThoughtToIPFS } from '../utils/ipfs';
+import { mintThoughtNFT } from '../utils/mintNft';
 
 const MAX_CHARS = 280;
 
@@ -47,6 +49,46 @@ export default function WriteThoughtScreen({ onBack }: { onBack: () => void }) {
       Alert.alert('Uploaded to IPFS! ✅', `Your thought is now on IPFS.\n\n${url}`);
     } catch (e) {
       Alert.alert('Upload failed', 'Something went wrong. Try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleMint = async () => {
+    if (!ipfsUrl) return;
+    if (!publicKey) {
+      Alert.alert('Connect your wallet first!');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const walletStore = useWalletStore.getState();
+      const mintAddress = await mintThoughtNFT(
+        {
+          publicKey,
+          signTransaction: walletStore.signTransaction,
+          signAllTransactions: walletStore.signAllTransactions,
+        },
+        ipfsUrl,
+        thought
+      );
+      Alert.alert(
+        'NFT Minted! 🎉',
+        `Your thought is now on Solana!\n\nMint address:\n${mintAddress}`,
+        [
+          {
+            text: 'View on Explorer',
+            onPress: () =>
+              Linking.openURL(
+                `https://explorer.solana.com/address/${mintAddress}?cluster=devnet`
+              ),
+          },
+          { text: 'Done' },
+        ]
+      );
+    } catch (e) {
+      Alert.alert('Minting failed', 'Something went wrong. Try again.');
     } finally {
       setUploading(false);
     }
@@ -103,10 +145,10 @@ export default function WriteThoughtScreen({ onBack }: { onBack: () => void }) {
           </View>
         )}
 
-        {/* Upload Button */}
+        {/* Button */}
         <TouchableOpacity
           style={[styles.button, uploading && styles.buttonDisabled]}
-          onPress={handleUpload}
+          onPress={ipfsUrl ? handleMint : handleUpload}
           disabled={uploading}
         >
           {uploading ? (

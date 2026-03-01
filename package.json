@@ -9,7 +9,13 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@metaplex-foundation/mpl-token-metadata": "^3.4.0",
+    "@metaplex-foundation/umi": "^1.5.1",
+    "@metaplex-foundation/umi-bundle-defaults": "^1.5.1",
+    "@metaplex-foundation/umi-signer-wallet-adapters": "^1.5.1",
     "@pinata/sdk": "^2.1.0",
+    "@react-navigation/bottom-tabs": "^7.15.2",
+    "@react-navigation/native": "^7.1.31",
     "@solana-mobile/mobile-wallet-adapter-protocol": "^2.2.5",
     "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "^2.2.5",
     "@solana/web3.js": "^1.98.4",
@@ -22,6 +28,8 @@
     "react": "19.2.0",
     "react-native": "0.83.2",
     "react-native-get-random-values": "^2.0.0",
+    "react-native-safe-area-context": "~5.6.2",
+    "react-native-screens": "~4.23.0",
     "stream-browserify": "^3.0.0",
     "url": "^0.11.4",
     "zustand": "^5.0.11"
