@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -6,20 +6,16 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useWalletStore } from '../stores/walletStore';
-import WriteThoughtScreen from './WriteThoughtScreen';
 
 export default function HomeScreen() {
   const { publicKey, connecting, connect, disconnect } = useWalletStore();
-  const [showWrite, setShowWrite] = useState(false);
+  const navigation = useNavigation<any>();
 
   const shortKey = publicKey
     ? `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`
     : null;
-
-  if (showWrite) {
-    return <WriteThoughtScreen onBack={() => setShowWrite(false)} />;
-  }
 
   return (
     <View style={styles.container}>
@@ -33,7 +29,7 @@ export default function HomeScreen() {
           <Text style={styles.connectedText}>Connected: {shortKey}</Text>
           <TouchableOpacity
             style={styles.writeButton}
-            onPress={() => setShowWrite(true)}
+            onPress={() => navigation.navigate('WriteThought')}
           >
             <Text style={styles.buttonText}>✍️ Write a Thought</Text>
           </TouchableOpacity>

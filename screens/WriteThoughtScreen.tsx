@@ -12,13 +12,15 @@ import {
   ScrollView,
   Linking,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useWalletStore } from '../stores/walletStore';
 import { uploadThoughtToIPFS } from '../utils/ipfs';
 import { mintThoughtNFT } from '../utils/mintNft';
 
 const MAX_CHARS = 280;
 
-export default function WriteThoughtScreen({ onBack }: { onBack: () => void }) {
+export default function WriteThoughtScreen() {
+  const navigation = useNavigation<any>();
   const { publicKey } = useWalletStore();
   const [thought, setThought] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -102,7 +104,7 @@ export default function WriteThoughtScreen({ onBack }: { onBack: () => void }) {
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={onBack}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.backButton}>← Back</Text>
           </TouchableOpacity>
           <Text style={styles.title}>Write Thought</Text>
