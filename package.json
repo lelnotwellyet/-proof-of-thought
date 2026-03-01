@@ -4,15 +4,24 @@
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web"
   },
   "dependencies": {
+    "@solana-mobile/mobile-wallet-adapter-protocol": "^2.2.5",
+    "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "^2.2.5",
+    "@solana/web3.js": "^1.98.4",
+    "bs58": "^6.0.0",
+    "buffer": "^6.0.3",
     "expo": "~55.0.4",
+    "expo-build-properties": "~55.0.9",
     "expo-status-bar": "~55.0.4",
     "react": "19.2.0",
-    "react-native": "0.83.2"
+    "react-native": "0.83.2",
+    "react-native-get-random-values": "^2.0.0",
+    "stream-browserify": "^3.0.0",
+    "url": "^0.11.4"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
