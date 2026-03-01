@@ -21,7 +21,8 @@
     "react-native": "0.83.2",
     "react-native-get-random-values": "^2.0.0",
     "stream-browserify": "^3.0.0",
-    "url": "^0.11.4"
+    "url": "^0.11.4",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",

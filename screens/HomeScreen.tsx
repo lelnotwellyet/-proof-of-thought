@@ -6,10 +6,10 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { useSolana } from '../context/SolanaProvider';
+import { useWalletStore } from '../stores/walletStore';
 
 export default function HomeScreen() {
-  const { publicKey, connecting, connect, disconnect } = useSolana();
+  const { publicKey, connecting, connect, disconnect } = useWalletStore();
 
   const shortKey = publicKey
     ? `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`
