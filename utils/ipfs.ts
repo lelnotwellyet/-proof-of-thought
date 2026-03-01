@@ -8,6 +8,7 @@ export interface ThoughtMetadata {
   thought: string;
   timestamp: string;
   author: string;
+  audioUri?: string;
 }
 
 export const uploadThoughtToIPFS = async (metadata: ThoughtMetadata): Promise<string> => {

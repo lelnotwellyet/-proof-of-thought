@@ -16,7 +16,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useWalletStore } from '../stores/walletStore';
 import { uploadThoughtToIPFS } from '../utils/ipfs';
 import { mintThoughtNFT } from '../utils/mintNft';
-
+import { useAudioRecorder, AudioModule, RecordingPresets } from 'expo-audio';
+import { uploadAudioToIPFS, requestMicPermission } from '../utils/audio';
 const MAX_CHARS = 280;
 
 export default function WriteThoughtScreen() {
@@ -25,12 +26,43 @@ export default function WriteThoughtScreen() {
   const [thought, setThought] = useState('');
   const [uploading, setUploading] = useState(false);
   const [ipfsUrl, setIpfsUrl] = useState<string | null>(null);
+const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+const [isRecording, setIsRecording] = useState(false);
+  const [audioUri, setAudioUri] = useState<string | null>(null);
+  const [audioIpfsUrl, setAudioIpfsUrl] = useState<string | null>(null);
 
   const charsLeft = MAX_CHARS - thought.length;
+const handleStartRecording = async () => {
+  try {
+    const granted = await requestMicPermission();
+    if (!granted) {
+      Alert.alert('Permission denied', 'Microphone permission is required.');
+      return;
+    }
+    await audioRecorder.prepareToRecordAsync();
+    audioRecorder.record();
+    setIsRecording(true);
+    setAudioUri(null);
+    setAudioIpfsUrl(null);
+  } catch (e) {
+    Alert.alert('Recording failed', 'Could not start recording.');
+  }
+};
+
+const handleStopRecording = async () => {
+  try {
+    await audioRecorder.stop();
+    setIsRecording(false);
+    const uri = audioRecorder.uri;
+    if (uri) setAudioUri(uri);
+  } catch (e) {
+    Alert.alert('Recording failed', 'Could not stop recording.');
+  }
+};
 
   const handleUpload = async () => {
-    if (!thought.trim()) {
-      Alert.alert('Write something first!');
+    if (!thought.trim() && !audioUri) {
+      Alert.alert('Add a thought or record your voice first!');
       return;
     }
     if (!publicKey) {
@@ -40,12 +72,20 @@ export default function WriteThoughtScreen() {
 
     setUploading(true);
     try {
+      let uploadedAudioUrl: string | undefined;
+
+      if (audioUri) {
+        uploadedAudioUrl = await uploadAudioToIPFS(audioUri);
+        setAudioIpfsUrl(uploadedAudioUrl);
+      }
+
       const url = await uploadThoughtToIPFS({
         name: `Proof of Thought #${Date.now()}`,
         description: 'A thought minted on Solana via Proof of Thought app',
-        thought: thought.trim(),
+        thought: thought.trim() || '🎙️ Voice thought',
         timestamp: new Date().toISOString(),
         author: publicKey.toString(),
+        audioUri: uploadedAudioUrl,
       });
       setIpfsUrl(url);
       Alert.alert('Uploaded to IPFS! ✅', `Your thought is now on IPFS.\n\n${url}`);
@@ -73,7 +113,7 @@ export default function WriteThoughtScreen() {
           signAllTransactions: walletStore.signAllTransactions,
         },
         ipfsUrl,
-        thought
+        thought || '🎙️ Voice thought'
       );
       Alert.alert(
         'NFT Minted! 🎉',
@@ -86,7 +126,7 @@ export default function WriteThoughtScreen() {
                 `https://explorer.solana.com/address/${mintAddress}?cluster=devnet`
               ),
           },
-          { text: 'Done' },
+          { text: 'Done', onPress: () => navigation.goBack() },
         ]
       );
     } catch (e) {
@@ -111,7 +151,7 @@ export default function WriteThoughtScreen() {
           <View style={{ width: 60 }} />
         </View>
 
-        {/* Input */}
+        {/* Text Input */}
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
@@ -120,14 +160,36 @@ export default function WriteThoughtScreen() {
             value={thought}
             onChangeText={(t) => t.length <= MAX_CHARS && setThought(t)}
             multiline
-            autoFocus
           />
           <Text style={[styles.charCount, charsLeft < 20 && styles.charCountWarning]}>
             {charsLeft} characters left
           </Text>
         </View>
 
-        {/* Timestamp preview */}
+        {/* Voice Recording */}
+        <View style={styles.voiceContainer}>
+          <Text style={styles.voiceLabel}>Or record your thought 🎙️</Text>
+          {!isRecording && !audioUri && (
+            <TouchableOpacity style={styles.recordButton} onPress={handleStartRecording}>
+              <Text style={styles.recordButtonText}>🎙️ Start Recording</Text>
+            </TouchableOpacity>
+          )}
+          {isRecording && (
+            <TouchableOpacity style={styles.stopButton} onPress={handleStopRecording}>
+              <Text style={styles.recordButtonText}>⏹️ Stop Recording</Text>
+            </TouchableOpacity>
+          )}
+          {audioUri && !isRecording && (
+            <View style={styles.audioReady}>
+              <Text style={styles.audioReadyText}>🎙️ Voice recorded ✅</Text>
+              <TouchableOpacity onPress={() => setAudioUri(null)}>
+                <Text style={styles.retakeText}>Retake</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        {/* Metadata preview */}
         <View style={styles.metaContainer}>
           <Text style={styles.metaLabel}>Timestamp</Text>
           <Text style={styles.metaValue}>{new Date().toLocaleString()}</Text>
@@ -194,6 +256,32 @@ const styles = StyleSheet.create({
   },
   charCount: { color: '#555', fontSize: 12, textAlign: 'right', marginTop: 8 },
   charCountWarning: { color: '#ff6b6b' },
+  voiceContainer: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+    alignItems: 'center',
+  },
+  voiceLabel: { color: '#888', fontSize: 14, marginBottom: 12 },
+  recordButton: {
+    backgroundColor: '#9945FF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  stopButton: {
+    backgroundColor: '#ff4444',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  recordButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  audioReady: { alignItems: 'center', gap: 8 },
+  audioReadyText: { color: '#00ff88', fontSize: 14 },
+  retakeText: { color: '#9945FF', fontSize: 13 },
   metaContainer: {
     backgroundColor: '#1a1a1a',
     borderRadius: 16,

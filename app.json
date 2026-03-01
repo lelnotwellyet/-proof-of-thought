@@ -4,9 +4,14 @@
     "slug": "proof-of-thought",
     "version": "1.0.0",
     "orientation": "portrait",
-    "platforms": ["android"],
+    "platforms": [
+      "android"
+    ],
     "android": {
-      "package": "com.proofofthought.app"
+      "package": "com.proofofthought.app",
+      "permissions": [
+        "RECORD_AUDIO"
+      ]
     },
     "plugins": [
       [
@@ -16,7 +21,8 @@
             "minSdkVersion": 26
           }
         }
-      ]
+      ],
+      "expo-audio"
     ]
   }
 }
