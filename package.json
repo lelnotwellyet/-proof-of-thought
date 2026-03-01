@@ -9,9 +9,11 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@pinata/sdk": "^2.1.0",
     "@solana-mobile/mobile-wallet-adapter-protocol": "^2.2.5",
     "@solana-mobile/mobile-wallet-adapter-protocol-web3js": "^2.2.5",
     "@solana/web3.js": "^1.98.4",
+    "axios": "^1.13.6",
     "bs58": "^6.0.0",
     "buffer": "^6.0.3",
     "expo": "~55.0.4",
