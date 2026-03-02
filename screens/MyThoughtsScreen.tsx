@@ -12,7 +12,7 @@ import {
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { dasApi } from '@metaplex-foundation/digital-asset-standard-api';
 import { publicKey } from '@metaplex-foundation/umi';
-import { clusterApiUrl } from '@solana/web3.js';
+import { useAudioPlayer } from 'expo-audio';
 import { useWalletStore } from '../stores/walletStore';
 
 interface Thought {
@@ -21,6 +21,49 @@ interface Thought {
   thought: string;
   timestamp: string;
   author: string;
+  audioUri?: string;
+}
+
+function ThoughtCard({ item }: { item: Thought }) {
+  const player = useAudioPlayer(item.audioUri || '');
+  const [playing, setPlaying] = useState(false);
+
+  const handlePlay = async () => {
+    if (playing) {
+      player.pause();
+      setPlaying(false);
+    } else {
+      player.play();
+      setPlaying(true);
+    }
+  };
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.thoughtText}>{item.thought}</Text>
+      {item.audioUri && (
+        <TouchableOpacity style={styles.playButton} onPress={handlePlay}>
+          <Text style={styles.playButtonText}>
+            {playing ? '⏸️ Pause Voice' : '▶️ Play Voice'}
+          </Text>
+        </TouchableOpacity>
+      )}
+      <View style={styles.cardMeta}>
+        <Text style={styles.timestamp}>
+          {item.timestamp ? new Date(item.timestamp).toLocaleDateString() : ''}
+        </Text>
+        <TouchableOpacity
+          onPress={() =>
+            Linking.openURL(
+              `https://explorer.solana.com/address/${item.mintAddress}?cluster=devnet`
+            )
+          }
+        >
+          <Text style={styles.explorerLink}>View on Explorer →</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 }
 
 export default function MyThoughtsScreen() {
@@ -34,12 +77,12 @@ export default function MyThoughtsScreen() {
     setLoading(true);
     try {
       const umi = createUmi('https://api.devnet.solana.com');
-umi.use(dasApi());
+      umi.use(dasApi());
+      const rpc = umi.rpc as any;
+      const assets = await rpc.getAssetsByOwner({
+        owner: publicKey(walletPublicKey.toString()),
+      });
 
-const rpc = umi.rpc as any;
-const assets = await rpc.getAssetsByOwner({
-  owner: publicKey(walletPublicKey.toString()),
-});
       const potAssets = assets.items.filter(
         (a: any) => a.content?.metadata?.symbol === 'POT'
       );
@@ -56,6 +99,7 @@ const assets = await rpc.getAssetsByOwner({
               thought: json.thought || '',
               timestamp: json.timestamp || '',
               author: json.author || '',
+              audioUri: json.audioUri || null,
             };
           } catch {
             return {
@@ -126,25 +170,7 @@ const assets = await rpc.getAssetsByOwner({
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#9945FF" />
           }
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <Text style={styles.thoughtText}>{item.thought}</Text>
-              <View style={styles.cardMeta}>
-                <Text style={styles.timestamp}>
-                  {item.timestamp ? new Date(item.timestamp).toLocaleDateString() : ''}
-                </Text>
-                <TouchableOpacity
-                  onPress={() =>
-                    Linking.openURL(
-                      `https://explorer.solana.com/address/${item.mintAddress}?cluster=devnet`
-                    )
-                  }
-                >
-                  <Text style={styles.explorerLink}>View on Explorer →</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
+          renderItem={({ item }) => <ThoughtCard item={item} />}
         />
       )}
     </View>
@@ -169,6 +195,16 @@ const styles = StyleSheet.create({
     borderColor: '#2a2a2a',
   },
   thoughtText: { color: '#fff', fontSize: 16, lineHeight: 24, marginBottom: 12 },
+  playButton: {
+    backgroundColor: '#9945FF20',
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#9945FF',
+    alignSelf: 'flex-start',
+  },
+  playButtonText: { color: '#9945FF', fontSize: 13, fontWeight: '600' },
   cardMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   timestamp: { color: '#555', fontSize: 12 },
   explorerLink: { color: '#9945FF', fontSize: 12 },
