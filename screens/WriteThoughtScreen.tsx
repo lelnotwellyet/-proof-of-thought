@@ -4,20 +4,23 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Linking,
+  ImageBackground,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useWalletStore } from '../stores/walletStore';
 import { uploadThoughtToIPFS } from '../utils/ipfs';
 import { mintThoughtNFT } from '../utils/mintNft';
-import { useAudioRecorder, AudioModule, RecordingPresets } from 'expo-audio';
+import { useAudioRecorder, RecordingPresets } from 'expo-audio';
 import { uploadAudioToIPFS, requestMicPermission } from '../utils/audio';
+import { styles } from './WriteThoughtScreen.styles';
+
 const MAX_CHARS = 280;
 
 export default function WriteThoughtScreen() {
@@ -26,59 +29,58 @@ export default function WriteThoughtScreen() {
   const [thought, setThought] = useState('');
   const [uploading, setUploading] = useState(false);
   const [ipfsUrl, setIpfsUrl] = useState<string | null>(null);
-const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-const [isRecording, setIsRecording] = useState(false);
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const [isRecording, setIsRecording] = useState(false);
   const [audioUri, setAudioUri] = useState<string | null>(null);
   const [audioIpfsUrl, setAudioIpfsUrl] = useState<string | null>(null);
 
   const charsLeft = MAX_CHARS - thought.length;
-const handleStartRecording = async () => {
-  try {
-    const granted = await requestMicPermission();
-    if (!granted) {
-      Alert.alert('Permission denied', 'Microphone permission is required.');
-      return;
-    }
-    await audioRecorder.prepareToRecordAsync();
-    audioRecorder.record();
-    setIsRecording(true);
-    setAudioUri(null);
-    setAudioIpfsUrl(null);
-  } catch (e) {
-    Alert.alert('Recording failed', 'Could not start recording.');
-  }
-};
+  const charsUsedPercent = (thought.length / MAX_CHARS) * 100;
 
-const handleStopRecording = async () => {
-  try {
-    await audioRecorder.stop();
-    setIsRecording(false);
-    const uri = audioRecorder.uri;
-    if (uri) setAudioUri(uri);
-  } catch (e) {
-    Alert.alert('Recording failed', 'Could not stop recording.');
-  }
-};
+  const handleStartRecording = async () => {
+    try {
+      const granted = await requestMicPermission();
+      if (!granted) {
+        Alert.alert('Permission denied', 'Microphone permission is required.');
+        return;
+      }
+      await audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
+      setIsRecording(true);
+      setAudioUri(null);
+      setAudioIpfsUrl(null);
+    } catch (e) {
+      Alert.alert('Recording failed', 'Could not start recording.');
+    }
+  };
+
+  const handleStopRecording = async () => {
+    try {
+      await audioRecorder.stop();
+      setIsRecording(false);
+      const uri = audioRecorder.uri;
+      if (uri) setAudioUri(uri);
+    } catch (e) {
+      Alert.alert('Recording failed', 'Could not stop recording.');
+    }
+  };
 
   const handleUpload = async () => {
     if (!thought.trim() && !audioUri) {
-      Alert.alert('Add a thought or record your voice first!');
+      Alert.alert('ADD A THOUGHT', 'Write something or record your voice first.');
       return;
     }
     if (!publicKey) {
-      Alert.alert('Connect your wallet first!');
+      Alert.alert('NOT CONNECTED', 'Connect your wallet first.');
       return;
     }
-
     setUploading(true);
     try {
       let uploadedAudioUrl: string | undefined;
-
       if (audioUri) {
         uploadedAudioUrl = await uploadAudioToIPFS(audioUri);
         setAudioIpfsUrl(uploadedAudioUrl);
       }
-
       const url = await uploadThoughtToIPFS({
         name: `Proof of Thought #${Date.now()}`,
         description: 'A thought minted on Solana via Proof of Thought app',
@@ -88,21 +90,16 @@ const handleStopRecording = async () => {
         audioUri: uploadedAudioUrl,
       });
       setIpfsUrl(url);
-      Alert.alert('Uploaded to IPFS! ✅', `Your thought is now on IPFS.\n\n${url}`);
+      Alert.alert('UPLOADED ✅', `Your thought is now on IPFS.\n\n${url}`);
     } catch (e) {
-      Alert.alert('Upload failed', 'Something went wrong. Try again.');
+      Alert.alert('UPLOAD FAILED', 'Something went wrong. Try again.');
     } finally {
       setUploading(false);
     }
   };
 
   const handleMint = async () => {
-    if (!ipfsUrl) return;
-    if (!publicKey) {
-      Alert.alert('Connect your wallet first!');
-      return;
-    }
-
+    if (!ipfsUrl || !publicKey) return;
     setUploading(true);
     try {
       const walletStore = useWalletStore.getState();
@@ -116,8 +113,8 @@ const handleStopRecording = async () => {
         thought || '🎙️ Voice thought'
       );
       Alert.alert(
-        'NFT Minted! 🎉',
-        `Your thought is now on Solana!\n\nMint address:\n${mintAddress}`,
+        'NFT MINTED 🎉',
+        `Your thought is now permanent!\n\nMint:\n${mintAddress}`,
         [
           {
             text: 'View on Explorer',
@@ -130,183 +127,153 @@ const handleStopRecording = async () => {
         ]
       );
     } catch (e) {
-      Alert.alert('Minting failed', 'Something went wrong. Try again.');
+      Alert.alert('MINT FAILED', 'Something went wrong. Try again.');
     } finally {
       setUploading(false);
     }
   };
+
+  const now = new Date();
+  const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.backButton}>← Back</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>Write Thought</Text>
-          <View style={{ width: 60 }} />
-        </View>
-
-        {/* Text Input */}
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="What's on your mind? This will be minted as an NFT..."
-            placeholderTextColor="#555"
-            value={thought}
-            onChangeText={(t) => t.length <= MAX_CHARS && setThought(t)}
-            multiline
-          />
-          <Text style={[styles.charCount, charsLeft < 20 && styles.charCountWarning]}>
-            {charsLeft} characters left
-          </Text>
-        </View>
-
-        {/* Voice Recording */}
-        <View style={styles.voiceContainer}>
-          <Text style={styles.voiceLabel}>Or record your thought 🎙️</Text>
-          {!isRecording && !audioUri && (
-            <TouchableOpacity style={styles.recordButton} onPress={handleStartRecording}>
-              <Text style={styles.recordButtonText}>🎙️ Start Recording</Text>
-            </TouchableOpacity>
-          )}
-          {isRecording && (
-            <TouchableOpacity style={styles.stopButton} onPress={handleStopRecording}>
-              <Text style={styles.recordButtonText}>⏹️ Stop Recording</Text>
-            </TouchableOpacity>
-          )}
-          {audioUri && !isRecording && (
-            <View style={styles.audioReady}>
-              <Text style={styles.audioReadyText}>🎙️ Voice recorded ✅</Text>
-              <TouchableOpacity onPress={() => setAudioUri(null)}>
-                <Text style={styles.retakeText}>Retake</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        {/* Metadata preview */}
-        <View style={styles.metaContainer}>
-          <Text style={styles.metaLabel}>Timestamp</Text>
-          <Text style={styles.metaValue}>{new Date().toLocaleString()}</Text>
-          <Text style={styles.metaLabel}>Author</Text>
-          <Text style={styles.metaValue}>
-            {publicKey
-              ? `${publicKey.toString().slice(0, 8)}...${publicKey.toString().slice(-4)}`
-              : 'Not connected'}
-          </Text>
-        </View>
-
-        {/* IPFS URL if uploaded */}
-        {ipfsUrl && (
-          <View style={styles.successContainer}>
-            <Text style={styles.successText}>✅ Uploaded to IPFS</Text>
-            <Text style={styles.ipfsUrl}>{ipfsUrl}</Text>
-          </View>
-        )}
-
-        {/* Button */}
-        <TouchableOpacity
-          style={[styles.button, uploading && styles.buttonDisabled]}
-          onPress={ipfsUrl ? handleMint : handleUpload}
-          disabled={uploading}
+      <ImageBackground
+        source={require('../assets/bg-scanlines.jpg')}
+        style={{ flex: 1 }}
+        imageStyle={{ opacity: 0.35 }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
         >
-          {uploading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>
-              {ipfsUrl ? 'Mint as NFT →' : 'Upload to IPFS'}
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Text style={styles.backBtn}>{'< BACK'}</Text>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>NEW ENTRY</Text>
+            <Text style={styles.headerTime}>{timeStr}</Text>
+          </View>
+
+          {/* Input */}
+          <Text style={styles.sectionLabel}>// INPUT THOUGHT</Text>
+          <View style={styles.inputBox}>
+            <TextInput
+              style={styles.input}
+              placeholder="Type your thought here..."
+              placeholderTextColor="#3D2F6B"
+              value={thought}
+              onChangeText={(t) => t.length <= MAX_CHARS && setThought(t)}
+              multiline
+            />
+            <View style={styles.progressTrack}>
+              <View
+                style={[
+                  styles.progressFill,
+                  {
+                    width: `${charsUsedPercent}%` as any,
+                    backgroundColor: charsLeft < 20 ? '#cc2200' : '#FF6B00',
+                  },
+                ]}
+              />
+            </View>
+            <Text style={[styles.charCount, charsLeft < 20 && styles.charCountWarning]}>
+              {charsLeft} CHARS LEFT
             </Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* Voice recording — always visible */}
+          <Text style={styles.sectionLabel}>// VOICE INPUT</Text>
+          <View style={styles.voiceBox}>
+            <TouchableOpacity
+              style={isRecording ? styles.voiceBtnStop : styles.voiceBtn}
+              onPress={isRecording ? handleStopRecording : handleStartRecording}
+            >
+              <Text style={styles.voiceBtnText}>
+                {isRecording ? '> REC STOP_' : '> REC START_'}
+              </Text>
+            </TouchableOpacity>
+            {isRecording && (
+              <Text style={styles.recordingLabel}>● RECORDING...</Text>
+            )}
+            {audioUri && !isRecording && (
+              <View style={styles.audioReady}>
+                <Text style={styles.audioReadyText}>✓ VOICE CAPTURED</Text>
+                <TouchableOpacity onPress={() => setAudioUri(null)}>
+                  <Text style={styles.retakeText}>[ RETAKE ]</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* Metadata */}
+          <Text style={styles.sectionLabel}>// METADATA</Text>
+          <View style={styles.metaBox}>
+            <View style={styles.metaRow}>
+              <Text style={styles.metaKey}>TIMESTAMP</Text>
+              <Text style={styles.metaVal}>{now.toLocaleString()}</Text>
+            </View>
+            <View style={styles.metaDivider} />
+            <View style={styles.metaRow}>
+              <Text style={styles.metaKey}>AUTHOR</Text>
+              <Text style={styles.metaVal}>
+                {publicKey
+                  ? `${publicKey.toString().slice(0, 6)}...${publicKey.toString().slice(-4)}`
+                  : 'NOT CONNECTED'}
+              </Text>
+            </View>
+            <View style={styles.metaDivider} />
+            <View style={styles.metaRow}>
+              <Text style={styles.metaKey}>CHAIN</Text>
+              <Text style={styles.metaVal}>SOLANA DEVNET</Text>
+            </View>
+          </View>
+
+          {/* IPFS success */}
+          {ipfsUrl && (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.successBox}>
+                <Text style={styles.successTitle}>✓ IPFS UPLOAD OK</Text>
+                <Text style={styles.successUrl} numberOfLines={2}>{ipfsUrl}</Text>
+              </View>
+            </>
           )}
-        </TouchableOpacity>
-      </ScrollView>
+
+          <View style={styles.divider} />
+
+          {/* Action button */}
+          <TouchableOpacity
+            style={[styles.actionBtnWrapper, uploading && styles.actionBtnDisabled]}
+            onPress={ipfsUrl ? handleMint : handleUpload}
+            disabled={uploading}
+            activeOpacity={0.85}
+          >
+            <LinearGradient
+              colors={['#FF7A00', '#D45A00']}
+              style={styles.actionBtnGradient}
+            >
+              {uploading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.actionBtnText}>
+                  {ipfsUrl ? '> MINT AS NFT_' : '> UPLOAD TO IPFS_'}
+                </Text>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <Text style={styles.bottomLabel}>⛓ PROOF OF THOUGHT v1.0</Text>
+        </ScrollView>
+      </ImageBackground>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a' },
-  scroll: { padding: 24, paddingTop: 60 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 32,
-  },
-  backButton: { color: '#9945FF', fontSize: 16 },
-  title: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-  inputContainer: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#2a2a2a',
-  },
-  input: {
-    color: '#fff',
-    fontSize: 18,
-    minHeight: 150,
-    textAlignVertical: 'top',
-    lineHeight: 28,
-  },
-  charCount: { color: '#555', fontSize: 12, textAlign: 'right', marginTop: 8 },
-  charCountWarning: { color: '#ff6b6b' },
-  voiceContainer: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#2a2a2a',
-    alignItems: 'center',
-  },
-  voiceLabel: { color: '#888', fontSize: 14, marginBottom: 12 },
-  recordButton: {
-    backgroundColor: '#9945FF',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  stopButton: {
-    backgroundColor: '#ff4444',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  recordButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  audioReady: { alignItems: 'center', gap: 8 },
-  audioReadyText: { color: '#00ff88', fontSize: 14 },
-  retakeText: { color: '#9945FF', fontSize: 13 },
-  metaContainer: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    gap: 4,
-  },
-  metaLabel: { color: '#555', fontSize: 11, textTransform: 'uppercase', marginTop: 8 },
-  metaValue: { color: '#888', fontSize: 13, fontFamily: 'monospace' },
-  successContainer: {
-    backgroundColor: '#00ff8820',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#00ff88',
-  },
-  successText: { color: '#00ff88', fontSize: 14, fontWeight: 'bold', marginBottom: 8 },
-  ipfsUrl: { color: '#00ff88', fontSize: 11, fontFamily: 'monospace' },
-  button: {
-    backgroundColor: '#9945FF',
-    padding: 18,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  buttonDisabled: { opacity: 0.5 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-});

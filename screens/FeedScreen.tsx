@@ -2,18 +2,26 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
   Linking,
   RefreshControl,
+  ImageBackground,
 } from 'react-native';
+import Animated, {
+  FadeInDown,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { dasApi } from '@metaplex-foundation/digital-asset-standard-api';
 import { publicKey } from '@metaplex-foundation/umi';
 import { useAudioPlayer } from 'expo-audio';
 import { useWalletStore } from '../stores/walletStore';
+import { styles } from './FeedScreen.styles';
 
 interface Thought {
   mintAddress: string;
@@ -24,12 +32,25 @@ interface Thought {
 }
 
 const CREATOR_ADDRESS = '8fCUzqY4XYj7Gkc8PGkumb58iiecS9bWX9mmjnPRdRS6';
-
 const shortAddress = (addr: string) => `${addr.slice(0, 4)}...${addr.slice(-4)}`;
 
-function ThoughtCard({ item, walletPublicKey }: { item: Thought; walletPublicKey: any }) {
+function ThoughtCard({
+  item,
+  walletPublicKey,
+  index,
+}: {
+  item: Thought;
+  walletPublicKey: any;
+  index: number;
+}) {
   const player = useAudioPlayer(item.audioUri || '');
   const [playing, setPlaying] = useState(false);
+  const isYou = walletPublicKey && item.author === walletPublicKey.toString();
+
+  const scale = useSharedValue(1);
+  const cardStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   const handlePlay = async () => {
     if (playing) {
@@ -42,36 +63,57 @@ function ThoughtCard({ item, walletPublicKey }: { item: Thought; walletPublicKey
   };
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.thoughtText}>{item.thought}</Text>
-      {item.audioUri && (
-        <TouchableOpacity style={styles.playButton} onPress={handlePlay}>
-          <Text style={styles.playButtonText}>
-            {playing ? '⏸️ Pause Voice' : '▶️ Play Voice'}
-          </Text>
-        </TouchableOpacity>
-      )}
-      <View style={styles.cardMeta}>
-        <View>
-          <Text style={styles.author}>
-            {item.author ? shortAddress(item.author) : 'Unknown'}
-            {walletPublicKey && item.author === walletPublicKey.toString() ? ' (you)' : ''}
-          </Text>
-          <Text style={styles.timestamp}>
-            {item.timestamp ? new Date(item.timestamp).toLocaleDateString() : ''}
+    <Animated.View
+      entering={FadeInDown.delay(index * 60).springify()}
+      style={cardStyle}
+    >
+      <View style={styles.card}>
+        {/* Card header */}
+        <View style={styles.cardHeader}>
+          <View style={styles.authorBadge}>
+            <View style={[styles.authorDot, isYou && styles.authorDotYou]} />
+            <Text style={[styles.authorText, isYou && styles.authorTextYou]}>
+              {item.author ? shortAddress(item.author) : 'UNKNOWN'}
+            </Text>
+          </View>
+          <Text style={styles.cardDate}>
+            {item.timestamp
+              ? new Date(item.timestamp).toLocaleDateString()
+              : 'UNKNOWN'}
           </Text>
         </View>
-        <TouchableOpacity
-          onPress={() =>
-            Linking.openURL(
-              `https://explorer.solana.com/address/${item.mintAddress}?cluster=devnet`
-            )
-          }
-        >
-          <Text style={styles.explorerLink}>View →</Text>
-        </TouchableOpacity>
+
+        {/* Thought */}
+        <Text style={styles.thoughtText}>{item.thought}</Text>
+
+        {/* Voice */}
+        {item.audioUri && (
+          <TouchableOpacity style={styles.playButton} onPress={handlePlay}>
+            <Text style={styles.playButtonText}>
+              {playing ? '⏸ PAUSE VOICE' : '▶ PLAY VOICE'}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Footer */}
+        <View style={styles.cardFooter}>
+          <TouchableOpacity
+            onPress={() =>
+              Linking.openURL(
+                `https://explorer.solana.com/address/${item.mintAddress}?cluster=devnet`
+              )
+            }
+          >
+            <Text style={styles.explorerLink}>VIEW ON EXPLORER →</Text>
+          </TouchableOpacity>
+          {isYou && (
+            <View style={styles.youBadge}>
+              <Text style={styles.youBadgeText}>YOU</Text>
+            </View>
+          )}
+        </View>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -141,72 +183,64 @@ export default function FeedScreen() {
 
   if (loading && !refreshing) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#9945FF" />
-        <Text style={styles.loadingText}>Loading feed...</Text>
-      </View>
+      <ImageBackground
+        source={require('../assets/bg-scanlines.jpg')}
+        style={styles.center}
+        imageStyle={{ opacity: 0.35 }}
+      >
+        <ActivityIndicator size="large" color="#FF6B00" />
+        <Text style={styles.loadingText}>LOADING FEED...</Text>
+      </ImageBackground>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Public Feed</Text>
-      <Text style={styles.subtitle}>
-        {thoughts.length} thought{thoughts.length !== 1 ? 's' : ''} on chain
-      </Text>
+    <ImageBackground
+      source={require('../assets/bg-scanlines.jpg')}
+      style={styles.container}
+      imageStyle={{ opacity: 0.35 }}
+    >
+      {/* Header */}
+      <Animated.View
+        entering={FadeInDown.delay(0).springify()}
+        style={styles.header}
+      >
+        <Text style={styles.title}>PUBLIC FEED</Text>
+        <Text style={styles.subtitle}>
+          {thoughts.length} THOUGHT{thoughts.length !== 1 ? 'S' : ''} ON CHAIN
+        </Text>
+      </Animated.View>
 
       {thoughts.length === 0 ? (
-        <View style={styles.center}>
+        <Animated.View
+          entering={FadeInDown.delay(100).springify()}
+          style={styles.center}
+        >
           <Text style={styles.emptyIcon}>🌐</Text>
-          <Text style={styles.emptyTitle}>No thoughts yet</Text>
+          <Text style={styles.emptyTitle}>NO THOUGHTS YET</Text>
           <Text style={styles.emptyText}>Be the first to mint a thought!</Text>
-        </View>
+        </Animated.View>
       ) : (
         <FlatList
           data={thoughts}
           keyExtractor={(item) => item.mintAddress}
+          contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#9945FF" />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#FF6B00"
+            />
           }
-          renderItem={({ item }) => (
-            <ThoughtCard item={item} walletPublicKey={walletPublicKey} />
+          renderItem={({ item, index }) => (
+            <ThoughtCard
+              item={item}
+              walletPublicKey={walletPublicKey}
+              index={index}
+            />
           )}
         />
       )}
-    </View>
+    </ImageBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', padding: 24, paddingTop: 60 },
-  center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 4 },
-  subtitle: { fontSize: 14, color: '#555', marginBottom: 24 },
-  loadingText: { color: '#555', marginTop: 16 },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
-  emptyText: { color: '#555', fontSize: 14, textAlign: 'center' },
-  card: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#2a2a2a',
-  },
-  thoughtText: { color: '#fff', fontSize: 16, lineHeight: 24, marginBottom: 12 },
-  playButton: {
-    backgroundColor: '#9945FF20',
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#9945FF',
-    alignSelf: 'flex-start',
-  },
-  playButtonText: { color: '#9945FF', fontSize: 13, fontWeight: '600' },
-  cardMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
-  author: { color: '#9945FF', fontSize: 12, fontFamily: 'monospace', marginBottom: 2 },
-  timestamp: { color: '#555', fontSize: 11 },
-  explorerLink: { color: '#9945FF', fontSize: 12 },
-});

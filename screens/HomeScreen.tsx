@@ -4,9 +4,10 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
-  ImageBackground,
   Image,
+  ImageBackground,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -25,25 +26,25 @@ export default function HomeScreen() {
   const navigation = useNavigation<any>();
 
   const buttonScale = useSharedValue(1);
-  const logoScale = useSharedValue(1);
+  const blinkOpacity = useSharedValue(1);
 
   useEffect(() => {
-    logoScale.value = withRepeat(
+    blinkOpacity.value = withRepeat(
       withSequence(
-        withTiming(1.05, { duration: 2000 }),
-        withTiming(1, { duration: 2000 })
+        withTiming(0, { duration: 500 }),
+        withTiming(1, { duration: 500 })
       ),
       -1,
       false
     );
   }, []);
 
-  const buttonStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: buttonScale.value }],
+  const blinkStyle = useAnimatedStyle(() => ({
+    opacity: blinkOpacity.value,
   }));
 
-  const logoStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: logoScale.value }],
+  const buttonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
   }));
 
   const handlePressIn = () => {
@@ -62,12 +63,12 @@ export default function HomeScreen() {
     <ImageBackground
       source={require('../assets/bg-scanlines.jpg')}
       style={styles.container}
-      imageStyle={{ opacity: 0.4 }}
+      imageStyle={{ opacity: 0.35 }}
     >
       <View style={styles.content}>
 
         {/* Logo */}
-        <Animated.View entering={FadeInDown.delay(0).springify()} style={logoStyle}>
+        <Animated.View entering={FadeInDown.delay(0).springify()}>
           <Image
             source={require('../assets/brain-logo.jpg')}
             style={styles.logoImage}
@@ -76,41 +77,59 @@ export default function HomeScreen() {
         </Animated.View>
 
         {/* Title */}
-        <Animated.Text entering={FadeInDown.delay(80).springify()} style={styles.title}>
+        <Animated.Text
+          entering={FadeInDown.delay(100).springify()}
+          style={styles.title}
+        >
           Proof of Thought
         </Animated.Text>
-        <Animated.Text entering={FadeInDown.delay(140).springify()} style={styles.subtitle}>
+
+        <Animated.Text
+          entering={FadeInDown.delay(160).springify()}
+          style={styles.subtitle}
+        >
           OWN YOUR IDEAS ON CHAIN
         </Animated.Text>
 
-        <Animated.View entering={FadeInDown.delay(180).springify()} style={styles.divider} />
+        <Animated.View
+          entering={FadeInDown.delay(200).springify()}
+          style={styles.divider}
+        />
 
         {connecting ? (
-          <Animated.View entering={FadeInDown.springify()} style={{ alignItems: 'center' }}>
+          <View style={{ alignItems: 'center' }}>
             <ActivityIndicator size="large" color="#FF6B00" />
             <Text style={styles.loadingText}>CONNECTING...</Text>
-          </Animated.View>
+          </View>
         ) : publicKey ? (
           <Animated.View
-            entering={FadeInDown.delay(220).springify()}
-            style={{ width: '100%', alignItems: 'center' }}
+            entering={FadeInDown.delay(240).springify()}
+            style={{ width: '100%', alignItems: 'center', gap: 12 }}
           >
             {/* Connected badge */}
             <View style={styles.connectedBadge}>
               <View style={styles.connectedDot} />
               <Text style={styles.connectedText}>{shortKey}</Text>
+              <Animated.Text style={[styles.connectedText, blinkStyle]}>
+                _
+              </Animated.Text>
             </View>
 
             {/* Write button */}
             <Animated.View style={[buttonStyle, { width: '100%' }]}>
               <TouchableOpacity
-                style={styles.writeButton}
+                style={styles.writeButtonWrapper}
                 onPress={() => navigation.navigate('WriteThought')}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
                 activeOpacity={1}
               >
-                <Text style={styles.writeButtonText}>✍️  WRITE A THOUGHT</Text>
+                <LinearGradient
+                  colors={['#FF7A00', '#D45A00']}
+                  style={styles.writeButtonGradient}
+                >
+                  <Text style={styles.writeButtonText}>✍️  WRITE A THOUGHT</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </Animated.View>
 
@@ -132,33 +151,41 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            <TouchableOpacity style={styles.disconnectButton} onPress={disconnect}>
-              <Text style={styles.disconnectText}>DISCONNECT</Text>
+            <TouchableOpacity
+              style={styles.disconnectButton}
+              onPress={disconnect}
+            >
+              <Text style={styles.disconnectText}>Disconnect Wallet</Text>
             </TouchableOpacity>
           </Animated.View>
         ) : (
           <Animated.View
-            entering={FadeInDown.delay(220).springify()}
-            style={{ width: '100%', alignItems: 'center' }}
+            entering={FadeInDown.delay(240).springify()}
+            style={{ width: '100%', alignItems: 'center', gap: 16 }}
           >
             <Text style={styles.tagline}>
-              Every idea you have deserves to be{'\n'}
+              Every idea you have deserves{'\n'}to be{' '}
               <Text style={styles.taglineHighlight}>OWNED.</Text>
             </Text>
 
             <Animated.View style={[buttonStyle, { width: '100%' }]}>
               <TouchableOpacity
-                style={styles.connectButton}
+                style={styles.connectButtonWrapper}
                 onPress={connect}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
                 activeOpacity={1}
               >
-                <Text style={styles.connectButtonText}>🔗  CONNECT WALLET</Text>
+                <LinearGradient
+                  colors={['#FF7A00', '#D45A00']}
+                  style={styles.connectButtonGradient}
+                >
+                  <Text style={styles.connectButtonText}>🔗  CONNECT WALLET</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </Animated.View>
 
-            <Text style={styles.walletHint}>REQUIRES PHANTOM OR SOLFLARE</Text>
+            <Text style={styles.walletHint}>Requires Phantom or Solflare</Text>
           </Animated.View>
         )}
       </View>

@@ -2,18 +2,19 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
   Linking,
   RefreshControl,
+  ImageBackground,
 } from 'react-native';
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { dasApi } from '@metaplex-foundation/digital-asset-standard-api';
 import { publicKey } from '@metaplex-foundation/umi';
 import { useAudioPlayer } from 'expo-audio';
 import { useWalletStore } from '../stores/walletStore';
+import { styles } from './MyThoughtsScreen.styles';
 
 interface Thought {
   mintAddress: string;
@@ -24,7 +25,7 @@ interface Thought {
   audioUri?: string;
 }
 
-function ThoughtCard({ item }: { item: Thought }) {
+function ThoughtCard({ item, index }: { item: Thought; index: number }) {
   const player = useAudioPlayer(item.audioUri || '');
   const [playing, setPlaying] = useState(false);
 
@@ -40,18 +41,28 @@ function ThoughtCard({ item }: { item: Thought }) {
 
   return (
     <View style={styles.card}>
+      {/* Card header */}
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardIndex}>THOUGHT #{String(index + 1).padStart(3, '0')}</Text>
+        <Text style={styles.cardDate}>
+          {item.timestamp ? new Date(item.timestamp).toLocaleDateString() : 'UNKNOWN DATE'}
+        </Text>
+      </View>
+
+      {/* Thought content */}
       <Text style={styles.thoughtText}>{item.thought}</Text>
+
+      {/* Voice playback */}
       {item.audioUri && (
         <TouchableOpacity style={styles.playButton} onPress={handlePlay}>
           <Text style={styles.playButtonText}>
-            {playing ? '⏸️ Pause Voice' : '▶️ Play Voice'}
+            {playing ? '⏸ PAUSE VOICE' : '▶ PLAY VOICE'}
           </Text>
         </TouchableOpacity>
       )}
-      <View style={styles.cardMeta}>
-        <Text style={styles.timestamp}>
-          {item.timestamp ? new Date(item.timestamp).toLocaleDateString() : ''}
-        </Text>
+
+      {/* Card footer */}
+      <View style={styles.cardFooter}>
         <TouchableOpacity
           onPress={() =>
             Linking.openURL(
@@ -59,8 +70,11 @@ function ThoughtCard({ item }: { item: Thought }) {
             )
           }
         >
-          <Text style={styles.explorerLink}>View on Explorer →</Text>
+          <Text style={styles.explorerLink}>VIEW ON EXPLORER →</Text>
         </TouchableOpacity>
+        <View style={styles.mintBadge}>
+          <Text style={styles.mintBadgeText}>NFT</Text>
+        </View>
       </View>
     </View>
   );
@@ -133,79 +147,70 @@ export default function MyThoughtsScreen() {
 
   if (!walletPublicKey) {
     return (
-      <View style={styles.center}>
+      <ImageBackground
+        source={require('../assets/bg-scanlines.jpg')}
+        style={styles.center}
+        imageStyle={{ opacity: 0.35 }}
+      >
         <Text style={styles.emptyIcon}>🧠</Text>
-        <Text style={styles.emptyTitle}>Not Connected</Text>
+        <Text style={styles.emptyTitle}>NOT CONNECTED</Text>
         <Text style={styles.emptyText}>Connect your wallet to see your thoughts</Text>
-      </View>
+      </ImageBackground>
     );
   }
 
   if (loading && !refreshing) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#9945FF" />
-        <Text style={styles.loadingText}>Loading your thoughts...</Text>
-      </View>
+      <ImageBackground
+        source={require('../assets/bg-scanlines.jpg')}
+        style={styles.center}
+        imageStyle={{ opacity: 0.35 }}
+      >
+        <ActivityIndicator size="large" color="#FF6B00" />
+        <Text style={styles.loadingText}>LOADING THOUGHTS...</Text>
+      </ImageBackground>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>My Thoughts</Text>
-      <Text style={styles.subtitle}>
-        {thoughts.length} thought{thoughts.length !== 1 ? 's' : ''} minted
-      </Text>
+    <ImageBackground
+      source={require('../assets/bg-scanlines.jpg')}
+      style={styles.container}
+      imageStyle={{ opacity: 0.35 }}
+    >
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.title}>MY THOUGHTS</Text>
+        <Text style={styles.subtitle}>
+          {thoughts.length} THOUGHT{thoughts.length !== 1 ? 'S' : ''} MINTED ON CHAIN
+        </Text>
+      </View>
 
       {thoughts.length === 0 ? (
         <View style={styles.center}>
           <Text style={styles.emptyIcon}>✍️</Text>
-          <Text style={styles.emptyTitle}>No thoughts yet</Text>
-          <Text style={styles.emptyText}>Go to Home and mint your first thought!</Text>
+          <Text style={styles.emptyTitle}>NO THOUGHTS YET</Text>
+          <Text style={styles.emptyText}>
+            Go to Home and mint your first thought!
+          </Text>
         </View>
       ) : (
         <FlatList
           data={thoughts}
           keyExtractor={(item) => item.mintAddress}
+          contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#9945FF" />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#FF6B00"
+            />
           }
-          renderItem={({ item }) => <ThoughtCard item={item} />}
+          renderItem={({ item, index }) => (
+            <ThoughtCard item={item} index={index} />
+          )}
         />
       )}
-    </View>
+    </ImageBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0a', padding: 24, paddingTop: 60 },
-  center: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 4 },
-  subtitle: { fontSize: 14, color: '#555', marginBottom: 24 },
-  loadingText: { color: '#555', marginTop: 16 },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
-  emptyTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginBottom: 8 },
-  emptyText: { color: '#555', fontSize: 14, textAlign: 'center' },
-  card: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#2a2a2a',
-  },
-  thoughtText: { color: '#fff', fontSize: 16, lineHeight: 24, marginBottom: 12 },
-  playButton: {
-    backgroundColor: '#9945FF20',
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#9945FF',
-    alignSelf: 'flex-start',
-  },
-  playButtonText: { color: '#9945FF', fontSize: 13, fontWeight: '600' },
-  cardMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  timestamp: { color: '#555', fontSize: 12 },
-  explorerLink: { color: '#9945FF', fontSize: 12 },
-});
