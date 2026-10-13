@@ -7,6 +7,7 @@ import HomeScreen from '../screens/HomeScreen';
 import MyThoughtsScreen from '../screens/MyThoughtsScreen';
 import FeedScreen from '../screens/FeedScreen';
 import WriteThoughtScreen from '../screens/WriteThoughtScreen';
+import ThoughtDetailScreen from '../screens/ThoughtDetailScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -25,7 +26,7 @@ tabBarActiveTintColor: '#FF6B00',
 tabBarInactiveTintColor: '#444',
 tabBarLabelStyle: {
   fontFamily: 'PressStart2P_400Regular',
-  fontSize: 6,
+  fontSize: 8,
   marginBottom: 4,
 },
       }}
@@ -67,6 +68,7 @@ export default function AppNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Tabs" component={TabNavigator} />
         <Stack.Screen name="WriteThought" component={WriteThoughtScreen} />
+        <Stack.Screen name="ThoughtDetail" component={ThoughtDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

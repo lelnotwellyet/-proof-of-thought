@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   ActivityIndicator,
   Image,
   ImageBackground,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import PixelButton from '../components/PixelButton';
+import ErrorBanner from '../components/ErrorBanner';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -24,6 +24,7 @@ import { styles } from './HomeScreen.styles';
 export default function HomeScreen() {
   const { publicKey, connecting, connect, disconnect } = useWalletStore();
   const navigation = useNavigation<any>();
+  const [connectError, setConnectError] = useState<string | null>(null);
 
   const buttonScale = useSharedValue(1);
   const blinkOpacity = useSharedValue(1);
@@ -55,6 +56,14 @@ export default function HomeScreen() {
     buttonScale.value = withSpring(1, { damping: 15 });
   };
 
+  const handleConnect = async () => {
+    setConnectError(null);
+    await connect();
+    if (!useWalletStore.getState().publicKey) {
+      setConnectError('Wallet did not connect. Open Phantom or Solflare and retry.');
+    }
+  };
+
   const shortKey = publicKey
     ? `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`
     : null;
@@ -66,6 +75,9 @@ export default function HomeScreen() {
       imageStyle={{ opacity: 0.35 }}
     >
       <View style={styles.content}>
+        {connectError && (
+          <ErrorBanner message={connectError} onRetry={handleConnect} />
+        )}
 
         {/* Logo */}
         <Animated.View entering={FadeInDown.delay(0).springify()}>
@@ -117,20 +129,12 @@ export default function HomeScreen() {
 
             {/* Write button */}
             <Animated.View style={[buttonStyle, { width: '100%' }]}>
-              <TouchableOpacity
-                style={styles.writeButtonWrapper}
+              <PixelButton
+                label="WRITE A THOUGHT"
                 onPress={() => navigation.navigate('WriteThought')}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
-                activeOpacity={1}
-              >
-                <LinearGradient
-                  colors={['#FF7A00', '#D45A00']}
-                  style={styles.writeButtonGradient}
-                >
-                  <Text style={styles.writeButtonText}>✍️  WRITE A THOUGHT</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+              />
             </Animated.View>
 
             {/* Stats */}
@@ -151,12 +155,7 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            <TouchableOpacity
-              style={styles.disconnectButton}
-              onPress={disconnect}
-            >
-              <Text style={styles.disconnectText}>Disconnect Wallet</Text>
-            </TouchableOpacity>
+            <PixelButton label="DISCONNECT" variant="outline" onPress={disconnect} />
           </Animated.View>
         ) : (
           <Animated.View
@@ -169,20 +168,12 @@ export default function HomeScreen() {
             </Text>
 
             <Animated.View style={[buttonStyle, { width: '100%' }]}>
-              <TouchableOpacity
-                style={styles.connectButtonWrapper}
-                onPress={connect}
+              <PixelButton
+                label="CONNECT WALLET"
+                onPress={handleConnect}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
-                activeOpacity={1}
-              >
-                <LinearGradient
-                  colors={['#FF7A00', '#D45A00']}
-                  style={styles.connectButtonGradient}
-                >
-                  <Text style={styles.connectButtonText}>🔗  CONNECT WALLET</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+              />
             </Animated.View>
 
             <Text style={styles.walletHint}>Requires Phantom or Solflare</Text>

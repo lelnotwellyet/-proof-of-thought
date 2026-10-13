@@ -1,6 +1,4 @@
-import 'react-native-get-random-values';
-import { Buffer } from 'buffer';
-global.Buffer = Buffer;
+import './polyfills';
 
 import React from 'react';
 import { View, ActivityIndicator } from 'react-native';

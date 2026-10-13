@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Proof of Thought — Project & Architecture Guide</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 14mm 18mm 14mm;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    color: #1e293b;
+    line-height: 1.6;
+    font-size: 10.5pt;
+    margin: 0;
+    padding: 0;
+  }
+  .header {
+    border-bottom: 3px solid #ff6b00;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+  h1 {
+    color: #0f172a;
+    font-size: 22pt;
+    margin: 0 0 4px 0;
+  }
+  .subtitle {
+    color: #64748b;
+    font-size: 11pt;
+    margin: 0;
+  }
+  h2 {
+    color: #0f172a;
+    font-size: 14pt;
+    margin-top: 24px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 4px;
+    page-break-after: avoid;
+  }
+  h3 {
+    color: #334155;
+    font-size: 11.5pt;
+    margin-top: 14px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+  }
+  p {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+  .box {
+    background: #f8fafc;
+    border-left: 4px solid #ff6b00;
+    padding: 10px 14px;
+    margin: 12px 0;
+    border-radius: 0 4px 4px 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 16px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  th, td {
+    border: 1px solid #cbd5e1;
+    padding: 8px 10px;
+    text-align: left;
+  }
+  th {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    font-weight: 600;
+  }
+  tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+  .card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    page-break-inside: avoid;
+  }
+  .card-title {
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 4px;
+  }
+  ul, ol {
+    margin-top: 4px;
+    margin-bottom: 10px;
+    padding-left: 20px;
+  }
+  li {
+    margin-bottom: 4px;
+  }
+  .page-break {
+    page-break-before: always;
+  }
+  .footer {
+    text-align: center;
+    font-size: 8.5pt;
+    color: #94a3b8;
+    margin-top: 24px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 6px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Proof of Thought — Project & Architecture Guide</h1>
+    <p class="subtitle">A Simple, Plain-English Guide to What We Built, Why We Used Solana, and How It Works</p>
+  </div>
+
+  <h2>1. What is This App?</h2>
+  <p>
+    <strong>Proof of Thought</strong> is a mobile app on Android where users can write ideas (text) or speak them into their phone (voice notes), permanently save them to decentralized storage, and turn them into digital assets (NFTs) on the Solana blockchain.
+  </p>
+  <p>
+    Once minted, the app uses a custom smart contract to mathematically verify that the thought has never been edited or tampered with. It also includes an on-chain marketplace where creators can list their ideas or tunes for sale, and buyers can purchase them with SOL to take real ownership.
+  </p>
+
+  <h2>2. Why Solana Instead of Ethereum?</h2>
+  <p>
+    People often ask why we did not just build this on Ethereum. Here is the simple comparison:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Factor</th>
+        <th>Solana (What We Used)</th>
+        <th>Ethereum</th>
+        <th>Plain English Explanation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Mobile Wallets</strong></td>
+        <td>Mobile Wallet Adapter (MWA)</td>
+        <td>WalletConnect</td>
+        <td>Solana lets our app open Phantom directly on the same phone in milliseconds. Ethereum relies on cloud relay servers that disconnect frequently.</td>
+      </tr>
+      <tr>
+        <td><strong>Transaction Cost</strong></td>
+        <td>Less than $0.001 per action</td>
+        <td>$2 to $15+ per action</td>
+        <td>Our app is for everyday thoughts and voice notes. Nobody will pay several dollars just to record a 5-second thought.</td>
+      </tr>
+      <tr>
+        <td><strong>Speed</strong></td>
+        <td>Less than 1 second (~400 ms)</td>
+        <td>15 seconds to several minutes</td>
+        <td>When a user taps "Mint" or "Buy", Solana confirms the transaction almost instantly, just like a regular mobile app.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- PAGE BREAK -->
+  <div class="page-break"></div>
+
+  <h2>3. The 5 Steps: How a Thought Travels Through the App</h2>
+  <p>Here is what happens step-by-step from the moment a user opens the app to when a thought is on the blockchain:</p>
+
+  <div class="card">
+    <div class="card-title">Step 1: Connecting the Wallet</div>
+    <p>
+      The user taps <strong>Connect Wallet</strong>. The app uses the <strong>Solana Mobile Wallet Adapter (MWA)</strong> to open the Phantom wallet app on the phone. The user approves the connection. The app only receives the user's public address (their public key) — it never sees or touches their private keys.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 2: Recording or Typing the Thought</div>
+    <p>
+      The user can either type text (up to 280 characters) or tap <strong>Record</strong> to speak. When recording voice, the app uses the phone's microphone to save a small audio file (<code>.m4a</code>) on the phone.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 3: Storing on IPFS (Pinata)</div>
+    <p>
+      Storing audio or long paragraphs directly inside a blockchain is very expensive. Instead, the app uploads the audio file and a JSON text card (containing the thought text, author, and timestamp) to <strong>IPFS</strong> via Pinata. IPFS is a decentralized file storage network that gives us a permanent link (CID) to the file.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 4: Minting the NFT (Metaplex)</div>
+    <p>
+      The user taps <strong>Mint as NFT</strong>. The app uses Metaplex (the official NFT framework on Solana) to create a token with the symbol <strong>POT</strong> (Proof of Thought). This token points to the IPFS link. Phantom opens on the phone, the user approves the small devnet fee, and the user is now the on-chain owner of that NFT.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step 5: Verifying Authenticity (Our Anchor Program in Rust)</div>
+    <p>
+      An NFT link points to an off-chain file. To guarantee that nobody ever edits the text later, the app calculates a <strong>SHA-256 fingerprint (hash)</strong> of the thought text.
+    </p>
+    <p>
+      It sends this hash to our custom smart contract written in <strong>Rust</strong> using the <strong>Anchor</strong> framework. The contract saves this hash in a special blockchain account called a <strong>PDA (Program Derived Address)</strong> along with the author's address and the exact blockchain timestamp.
+    </p>
+    <p>
+      Whenever anyone opens the thought, the app recalculates the hash and checks it against Solana. If it matches, it displays the glowing <strong>[✓ VERIFIED ON-CHAIN]</strong> badge.
+    </p>
+  </div>
+
+  <!-- PAGE BREAK -->
+  <div class="page-break"></div>
+
+  <h2>4. The Marketplace: How Buying and Selling Works</h2>
+  <p>
+    Since each thought is an NFT on Solana, it can be bought, sold, and transferred peer-to-peer:
+  </p>
+  <ol>
+    <li><strong>Listing:</strong> The creator opens their thought, taps <strong>List for Sale</strong>, enters a price in SOL (e.g., 0.05 SOL), and approves in Phantom. The app marks the thought as for sale on-chain.</li>
+    <li><strong>Browsing:</strong> Other users browsing the Public Feed see the thought with a price tag (e.g., <code>[ 0.05 SOL ]</code>).</li>
+    <li><strong>Buying:</strong> When someone taps <strong>Buy IP Rights</strong>, Phantom opens on their phone. They pay the 0.05 SOL to the creator, and the ownership of the thought transfers to the buyer.</li>
+    <li><strong>Ownership Update:</strong> The thought now shows up in the buyer's <strong>My Thoughts</strong> collection, while permanently keeping the original author's name credited in the history.</li>
+  </ol>
+
+  <h2>5. Quick Summary of Technologies Used</h2>
+  <ul>
+    <li><strong>React Native & Expo:</strong> Builds the cross-platform mobile interface and handles audio recording through phone hardware.</li>
+    <li><strong>Solana Mobile Wallet Adapter (MWA):</strong> Securely connects the app to Phantom on Android without handling private keys.</li>
+    <li><strong>IPFS & Pinata:</strong> Decentralized file storage that permanently hosts voice files and metadata.</li>
+    <li><strong>Metaplex (Umi):</strong> The standard on Solana used to mint and manage NFTs.</li>
+    <li><strong>Anchor & Rust:</strong> The framework and programming language used to write our on-chain verification and escrow logic.</li>
+  </ul>
+
+  <h2>6. Team Division (3-Person Work Breakdown)</h2>
+  
+  <div class="card">
+    <div class="card-title">Person 1: Smart Contract & Blockchain Logic</div>
+    <p>
+      Wrote the custom Anchor program in <strong>Rust</strong> (<code>programs/thought-registry/src/lib.rs</code>), designed the PDA account structures, and handled the on-chain registry instructions.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Person 2: Verification Engine & Storage</div>
+    <p>
+      Built the cryptographic SHA-256 verification logic (<code>utils/verifyThought.ts</code>), the detail view screen, and the IPFS upload pipeline for voice notes and metadata.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Person 3: Mobile App & Marketplace Systems</div>
+    <p>
+      Integrated the Solana Mobile Wallet Adapter in <code>walletStore.tsx</code>, built the marketplace listing and buying flow, designed the retro UI components, and compiled the standalone Android APK.
+    </p>
+  </div>
+
+  <div class="footer">
+    Proof of Thought — Simple Technical Guide for Team Members
+  </div>
+
+</body>
+</html>

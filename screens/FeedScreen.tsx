@@ -20,16 +20,13 @@ import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { dasApi } from '@metaplex-foundation/digital-asset-standard-api';
 import { publicKey } from '@metaplex-foundation/umi';
 import { useAudioPlayer } from 'expo-audio';
+import { useNavigation } from '@react-navigation/native';
 import { useWalletStore } from '../stores/walletStore';
+import { ThoughtData } from '../types/thought';
+import PixelCard from '../components/PixelCard';
+import ErrorBanner from '../components/ErrorBanner';
 import { styles } from './FeedScreen.styles';
-
-interface Thought {
-  mintAddress: string;
-  thought: string;
-  timestamp: string;
-  author: string;
-  audioUri?: string;
-}
+import { applyListingState, formatSol } from '../utils/marketplace';
 
 const CREATOR_ADDRESS = '8fCUzqY4XYj7Gkc8PGkumb58iiecS9bWX9mmjnPRdRS6';
 const shortAddress = (addr: string) => `${addr.slice(0, 4)}...${addr.slice(-4)}`;
@@ -39,13 +36,15 @@ function ThoughtCard({
   walletPublicKey,
   index,
 }: {
-  item: Thought;
+  item: ThoughtData;
   walletPublicKey: any;
   index: number;
 }) {
+  const navigation = useNavigation<any>();
   const player = useAudioPlayer(item.audioUri || '');
   const [playing, setPlaying] = useState(false);
-  const isYou = walletPublicKey && item.author === walletPublicKey.toString();
+  const owner = item.currentOwner || item.author;
+  const isYou = walletPublicKey && owner === walletPublicKey.toString();
 
   const scale = useSharedValue(1);
   const cardStyle = useAnimatedStyle(() => ({
@@ -67,7 +66,7 @@ function ThoughtCard({
       entering={FadeInDown.delay(index * 60).springify()}
       style={cardStyle}
     >
-      <View style={styles.card}>
+      <PixelCard onPress={() => navigation.navigate('ThoughtDetail', { thought: item })}>
         {/* Card header */}
         <View style={styles.cardHeader}>
           <View style={styles.authorBadge}>
@@ -85,6 +84,9 @@ function ThoughtCard({
 
         {/* Thought */}
         <Text style={styles.thoughtText}>{item.thought}</Text>
+        {item.isForSale && item.priceSol != null && (
+          <Text style={styles.saleTag}>[ {formatSol(item.priceSol)} SOL ]</Text>
+        )}
 
         {/* Voice */}
         {item.audioUri && (
@@ -112,34 +114,57 @@ function ThoughtCard({
             </View>
           )}
         </View>
-      </View>
+      </PixelCard>
     </Animated.View>
   );
 }
 
 export default function FeedScreen() {
   const { publicKey: walletPublicKey } = useWalletStore();
-  const [thoughts, setThoughts] = useState<Thought[]>([]);
+  const [thoughts, setThoughts] = useState<ThoughtData[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchFeed = async () => {
     setLoading(true);
+    setError(null);
     try {
       const umi = createUmi('https://api.devnet.solana.com');
       umi.use(dasApi());
       const rpc = umi.rpc as any;
 
-      const assets = await rpc.getAssetsByCreator({
-        creator: publicKey(CREATOR_ADDRESS),
-        onlyVerified: false,
-      });
-
-      const potAssets = assets.items.filter(
-        (a: any) => a.content?.metadata?.symbol === 'POT'
+      const creatorsToQuery = Array.from(
+        new Set([
+          CREATOR_ADDRESS,
+          'avwQ7BH6Naxoe6pGmVGtCRXeWseLemKwxKgEFxcQaqK',
+          ...(walletPublicKey ? [walletPublicKey.toString()] : []),
+        ])
       );
 
-      const fetched: Thought[] = await Promise.all(
+      const allItems: any[] = [];
+      const seenIds = new Set<string>();
+
+      for (const c of creatorsToQuery) {
+        try {
+          const res = await rpc.getAssetsByCreator({
+            creator: publicKey(c),
+            onlyVerified: false,
+          });
+          for (const item of (res.items || [])) {
+            if (item.content?.metadata?.symbol === 'POT' && !seenIds.has(item.id)) {
+              seenIds.add(item.id);
+              allItems.push(item);
+            }
+          }
+        } catch (err) {
+          console.warn('Failed querying creator:', c, err);
+        }
+      }
+
+      const potAssets = allItems;
+
+      const fetched: ThoughtData[] = await Promise.all(
         potAssets.map(async (asset: any) => {
           try {
             const uri = asset.content?.json_uri;
@@ -147,14 +172,17 @@ export default function FeedScreen() {
             const json = await res.json();
             return {
               mintAddress: asset.id,
+              name: json.name || 'Proof of Thought',
               thought: json.thought || '',
               timestamp: json.timestamp || '',
               author: json.author || '',
               audioUri: json.audioUri || null,
+              currentOwner: asset.ownership?.owner || json.author || '',
             };
           } catch {
             return {
               mintAddress: asset.id,
+              name: 'Proof of Thought',
               thought: 'Could not load thought',
               timestamp: '',
               author: '',
@@ -163,9 +191,11 @@ export default function FeedScreen() {
         })
       );
 
-      setThoughts(fetched.reverse());
+      const listed = await applyListingState(useWalletStore.getState().connection, fetched);
+      setThoughts(listed.reverse());
     } catch (e) {
       console.error('Failed to fetch feed:', e);
+      setError('Network error while loading the feed.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -201,6 +231,7 @@ export default function FeedScreen() {
       imageStyle={{ opacity: 0.35 }}
     >
       {/* Header */}
+      {error && <ErrorBanner message={error} onRetry={onRefresh} />}
       <Animated.View
         entering={FadeInDown.delay(0).springify()}
         style={styles.header}

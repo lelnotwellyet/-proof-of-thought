@@ -18,12 +18,18 @@ export const mintThoughtNFT = async (
 
     const mint = generateSigner(umi);
 
+    const CREATOR_ADDRESS = '8fCUzqY4XYj7Gkc8PGkumb58iiecS9bWX9mmjnPRdRS6';
+
     await createNft(umi, {
       mint,
       name: `Proof of Thought`,
       uri: ipfsUrl,
       sellerFeeBasisPoints: percentAmount(0),
       symbol: 'POT',
+      creators: [
+        { address: publicKey(CREATOR_ADDRESS), verified: false, share: 0 },
+        { address: signer.publicKey, verified: true, share: 100 },
+      ],
     }).sendAndConfirm(umi);
 
     return mint.publicKey.toString();

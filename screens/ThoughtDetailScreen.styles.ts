@@ -1,0 +1,77 @@
+import { StyleSheet } from 'react-native';
+import { colors, fonts, spacing } from '../styles/theme';
+
+export const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#080808' },
+  scroll: { padding: spacing.lg, paddingBottom: 48 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+    marginTop: spacing.xl,
+  },
+  backBtn: { fontFamily: fonts.pixel, fontSize: 8, color: colors.primary },
+  headerTitle: { fontFamily: fonts.pixel, fontSize: 10, color: colors.white },
+  label: {
+    fontFamily: fonts.pixel,
+    fontSize: 7,
+    color: colors.grey1,
+    marginBottom: spacing.sm,
+    marginTop: spacing.md,
+  },
+  thought: {
+    fontFamily: fonts.pixel,
+    fontSize: 10,
+    lineHeight: 18,
+    color: colors.white,
+  },
+  pda: {
+    fontFamily: fonts.mono,
+    fontSize: 11,
+    color: colors.grey1,
+    marginTop: spacing.sm,
+  },
+  metaKey: { fontFamily: fonts.pixel, fontSize: 7, color: colors.accent, marginTop: spacing.sm },
+  metaVal: { fontFamily: fonts.mono, fontSize: 12, color: colors.white, marginTop: 4 },
+  play: { marginTop: spacing.sm },
+  saleBadge: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: colors.accent,
+    backgroundColor: colors.accentDim,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    marginTop: spacing.md,
+  },
+  saleText: {
+    fontFamily: fonts.pixel,
+    fontSize: 7,
+    lineHeight: 14,
+    color: colors.accent,
+  },
+  ownedText: { color: colors.primary },
+  ownedBadge: { borderColor: colors.primary, backgroundColor: colors.primaryDim },
+  action: { marginTop: spacing.md },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.72)',
+    justifyContent: 'center',
+    padding: spacing.lg,
+  },
+  modalCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    padding: spacing.lg,
+  },
+  priceInput: {
+    fontFamily: fonts.mono,
+    fontSize: 18,
+    color: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    marginVertical: spacing.md,
+  },
+});

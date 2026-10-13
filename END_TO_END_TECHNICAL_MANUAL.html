@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Proof of Thought — Complete Technical & Architectural Manual</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 14mm 18mm 14mm;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1e293b;
+    line-height: 1.6;
+    font-size: 10.5pt;
+    margin: 0;
+    padding: 0;
+  }
+  .header {
+    border-bottom: 3px solid #ff6b00;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+  }
+  h1 {
+    color: #0f172a;
+    font-size: 24pt;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.5px;
+  }
+  .subtitle {
+    color: #64748b;
+    font-size: 12pt;
+    margin: 0;
+    font-weight: 500;
+  }
+  .callout {
+    background: #f8fafc;
+    border-left: 4px solid #ff6b00;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 10pt;
+  }
+  h2 {
+    color: #0f172a;
+    font-size: 15pt;
+    margin-top: 26px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 4px;
+    page-break-after: avoid;
+  }
+  h3 {
+    color: #334155;
+    font-size: 12pt;
+    margin-top: 16px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 20px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  th, td {
+    border: 1px solid #cbd5e1;
+    padding: 8px 10px;
+    text-align: left;
+  }
+  th {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    font-weight: 600;
+  }
+  tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+  .pipeline-step {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    page-break-inside: avoid;
+  }
+  .step-num {
+    display: inline-block;
+    background: #ff6b00;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 9pt;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+  }
+  .step-title {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 11pt;
+  }
+  code {
+    background: #f1f5f9;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 9pt;
+    color: #b91c1c;
+  }
+  pre {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 8.5pt;
+    overflow-x: auto;
+    line-height: 1.45;
+    page-break-inside: avoid;
+  }
+  ul, ol {
+    margin-top: 6px;
+    margin-bottom: 12px;
+    padding-left: 20px;
+  }
+  li {
+    margin-bottom: 4px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 8pt;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .badge-rust { background: #fee2e2; color: #b91c1c; }
+  .badge-sol { background: #ede9fe; color: #6d28d9; }
+  .badge-rn { background: #e0f2fe; color: #0369a1; }
+  .page-break {
+    page-break-before: always;
+  }
+  .footer {
+    text-align: center;
+    font-size: 8.5pt;
+    color: #94a3b8;
+    margin-top: 30px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>PROOF OF THOUGHT</h1>
+    <p class="subtitle">Complete Technical & Architectural Manual: From Concept to Blockchain Execution</p>
+  </div>
+
+  <div class="callout">
+    <strong>Overview:</strong> This guide explains the complete technical architecture of <strong>Proof of Thought</strong> — an Android dApp built using React Native, Rust/Anchor smart contracts, Metaplex NFTs, IPFS, and the Solana Mobile Wallet Adapter. Use this manual to prepare for presentations, team study, and viva voce defense.
+  </div>
+
+  <h2>1. Why Solana Instead of Ethereum? (The Defense)</h2>
+  <p>
+    When examiners ask: <em>"Why did you choose Solana over Ethereum, Polygon, or standard EVM L2s?"</em>, 
+    present this comparison across four fundamental engineering criteria:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Engineering Pillar</th>
+        <th>Solana (Our Architecture)</th>
+        <th>Ethereum (EVM / L2s)</th>
+        <th>Why It Matters for This App</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Mobile Wallet Communication</strong></td>
+        <td><strong>Solana Mobile Wallet Adapter (MWA)</strong><br>Direct Android Intent sessions</td>
+        <td>WalletConnect v2<br>Relay servers, bridge latency</td>
+        <td>MWA communicates directly with Phantom on the physical phone via local Android intents. There are no intermediate cloud relay servers that disconnect or time out.</td>
+      </tr>
+      <tr>
+        <td><strong>Transaction Economics</strong></td>
+        <td><strong>&lt; $0.0008 per transaction</strong><br>(~0.000005 SOL)</td>
+        <td>$2.00 – $20.00+ Gas<br>(L2s: $0.02 – $0.15)</td>
+        <td>A consumer journaling and ideation app requires micro-transactions. Users cannot be expected to spend dollars just to record a 5-second thought.</td>
+      </tr>
+      <tr>
+        <td><strong>Transaction Finality</strong></td>
+        <td><strong>~400 ms slot time</strong><br>(Sub-second optimistic confirmation)</td>
+        <td>12–15s blocks<br>(12+ minutes to finality)</td>
+        <td>Mobile applications demand instantaneous UI feedback. Solana provides Web2-level responsiveness when minting, listing, or purchasing thoughts.</td>
+      </tr>
+      <tr>
+        <td><strong>State Storage Architecture</strong></td>
+        <td><strong>Program Derived Addresses (PDAs)</strong><br>Deterministic math derivation: O(1)</td>
+        <td>Contract storage mappings<br>Requires event log querying</td>
+        <td>The mobile app derives the exact on-chain verification address locally using public keys and seeds without scanning entire blockchain event logs.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- PAGE BREAK -->
+  <div class="page-break"></div>
+
+  <h2>2. The End-to-End Pipeline: The Journey of a Thought</h2>
+  <p>The entire system functions as a 5-stage pipeline connecting mobile hardware, decentralized storage, and on-chain state:</p>
+
+  <pre>
+  [Phone Microphone / Text Input]
+               │
+               ▼
+  [1. Hardware Capture: expo-audio .m4a & React State]
+               │
+               ▼
+  [2. Decentralized Storage: Multipart IPFS Pinning via Pinata] ──► (Returns permanent CID)
+               │
+               ▼
+  [3. Tokenization: Metaplex Umi NFT Minting (POT Token)] ───────► (MWA Signs via Phantom)
+               │
+               ▼
+  [4. Integrity Verification: SHA-256 Hashing & Rust Anchor PDA] ──► (Immutable on-chain proof)
+               │
+               ▼
+  [5. Monetization: Peer-to-Peer On-Chain Escrow Marketplace] ───► (SOL Payment + IP Transfer)
+  </pre>
+
+  <div class="pipeline-step">
+    <span class="step-num">STAGE 1</span>
+    <span class="step-title">Hardware Capture (Text & Voice Audio)</span>
+    <span class="badge badge-rn">React Native / Expo</span>
+    <p>
+      Users capture ideas either through formatted text (up to 280 characters with live progress metrics) or by recording spoken thoughts. 
+      The audio recording utilizes <code>expo-audio</code>, directly accessing Android hardware microphone buffers to produce an optimized MPEG-4 AAC (<code>.m4a</code>) binary file in the app's sandboxed storage.
+    </p>
+  </div>
+
+  <div class="pipeline-step">
+    <span class="step-num">STAGE 2</span>
+    <span class="step-title">Decentralized Archival (IPFS via Pinata)</span>
+    <span class="badge badge-rn">IPFS / Axios</span>
+    <p>
+      Storing audio or arbitrary text directly inside Solana accounts incurs state rent fees (~0.00089 SOL per 100 bytes). 
+      To prevent blockchain bloat, our architecture offloads heavy data to the InterPlanetary File System (IPFS). 
+      The audio binary is uploaded via <code>multipart/form-data</code> to Pinata's pinning gateway, and an industry-standard NFT JSON metadata schema is generated:
+    </p>
+    <pre>
+{
+  "name": "Proof of Thought #172839",
+  "description": "Minted on Solana via Proof of Thought",
+  "thought": "Decentralization guarantees sovereignty over human creativity.",
+  "author": "8fCUzqY4XYj7Gkc8PGkumb58iiecS9bWX9mmjnPRdRS6",
+  "timestamp": "2026-10-08T14:15:00Z",
+  "audioUri": "https://gateway.pinata.cloud/ipfs/QmVoiceNote..."
+}
+    </pre>
+  </div>
+
+  <div class="pipeline-step">
+    <span class="step-num">STAGE 3</span>
+    <span class="step-title">NFT Tokenization (Metaplex Umi on Devnet)</span>
+    <span class="badge badge-sol">Solana / Metaplex</span>
+    <p>
+      The app leverages Metaplex Umi (<code>@metaplex-foundation/mpl-token-metadata</code>) to mint a standardized Non-Fungible Token on Solana Devnet with symbol <code>POT</code>. 
+      The token's metadata points permanently to the IPFS URI. Phantom signs and pays the network transaction through the Mobile Wallet Adapter protocol.
+    </p>
+  </div>
+
+  <!-- PAGE BREAK -->
+  <div class="page-break"></div>
+
+  <div class="pipeline-step">
+    <span class="step-num">STAGE 4</span>
+    <span class="step-title">Cryptographic Integrity (Rust / Anchor Smart Contract)</span>
+    <span class="badge badge-rust">Rust / Anchor</span>
+    <p>
+      An NFT URI points to off-chain data. To ensure mathematical tamper-proofing, the app computes a <strong>SHA-256 hash</strong> of the thought text. 
+      This 32-byte digest is registered in our custom <strong>Anchor program written in Rust</strong> (<code>programs/thought-registry/src/lib.rs</code>).
+    </p>
+    <p>
+      The contract allocates a <strong>Program Derived Address (PDA)</strong> with seeds <code>["thought", nft_mint_pubkey]</code> and stores:
+    </p>
+    <pre>
+#[account]
+pub struct ThoughtRecord {
+    pub author: Pubkey,         // 32 bytes: Creator wallet
+    pub mint: Pubkey,           // 32 bytes: NFT address
+    pub content_hash: [u8; 32], // 32 bytes: SHA-256 fingerprint
+    pub timestamp: i64,         // 8 bytes: Immutable clock timestamp
+    pub bump: u8,               // 1 byte: PDA bump seed
+}
+    </pre>
+    <p>
+      <strong>How Verification Works:</strong> When any user opens the thought card, the app recalculates the SHA-256 hash client-side and queries the PDA from Solana. 
+      If the hashes match, it displays the glowing <strong><code>[✓ VERIFIED ON-CHAIN]</code></strong> badge.
+    </p>
+  </div>
+
+  <div class="pipeline-step">
+    <span class="step-num">STAGE 5</span>
+    <span class="step-title">P2P Monetization & Transfer of IP (On-Chain Marketplace)</span>
+    <span class="badge badge-sol">Marketplace Escrow</span>
+    <p>
+      Creators can monetize their ideas, poems, melodies, or startup notes. 
+      When a creator taps <strong><code>[ LIST FOR SALE ]</code></strong>, the listing price in SOL is recorded on-chain.
+    </p>
+    <p>
+      When another user browsing the Public Feed taps <strong><code>[ ⚡ BUY IP RIGHTS ]</code></strong>:
+    </p>
+    <ol>
+      <li>The buyer signs a transaction via Phantom.</li>
+      <li>The SOL payment is transferred directly from buyer to creator.</li>
+      <li>On-chain ownership of the digital asset transfers to the buyer.</li>
+      <li>The thought dynamically migrates into the buyer's <strong>"My Thoughts"</strong> portfolio while preserving original author attribution.</li>
+    </ol>
+  </div>
+
+  <h2>3. The 3-Person Team Breakdown (Viva Defense Guide)</h2>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>Team Member</th>
+        <th>Assigned Technical Domain</th>
+        <th>Core Code Artifacts</th>
+        <th>Key Viva Question to Answer</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Student 1 (Lead)</strong></td>
+        <td>On-Chain Smart Contract & Escrow Logic</td>
+        <td><code>programs/thought-registry/src/lib.rs</code><br><code>utils/anchorClient.ts</code></td>
+        <td><em>"Explain how your Rust program uses PDAs and how space allocation is calculated."</em></td>
+      </tr>
+      <tr>
+        <td><strong>Student 2</strong></td>
+        <td>Cryptographic Verification & Storage Pipeline</td>
+        <td><code>screens/ThoughtDetailScreen.tsx</code><br><code>utils/verifyThought.ts</code><br><code>utils/ipfs.ts</code></td>
+        <td><em>"How does your verification logic detect if someone alters the thought on IPFS?"</em></td>
+      </tr>
+      <tr>
+        <td><strong>Student 3</strong></td>
+        <td>Mobile Systems & Component Architecture</td>
+        <td><code>stores/walletStore.tsx</code><br><code>components/PixelCard.tsx</code><br>Android Gradle APK Pipeline</td>
+        <td><em>"How does Mobile Wallet Adapter protect user private keys during signing?"</em></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="footer">
+    Proof of Thought — College Blockchain Mini-Project Technical Architecture Manual
+  </div>
+
+</body>
+</html>

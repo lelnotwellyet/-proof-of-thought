@@ -161,6 +161,15 @@ export const styles = StyleSheet.create({
     fontSize: 6,
     color: colors.accent,
   },
+  saleTag: {
+    fontFamily: fonts.pixel,
+    fontSize: 7,
+    color: colors.accent,
+    marginTop: spacing.sm,
+    textShadowColor: colors.accent,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
+  },
 
   // Empty state
   emptyIcon: {

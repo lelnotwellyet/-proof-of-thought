@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Proof of Thought — Project Defense & Architecture Manual</title>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 15mm 20mm 15mm;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1a1a24;
+    line-height: 1.55;
+    font-size: 11pt;
+    padding: 0;
+    margin: 0;
+  }
+  h1 {
+    color: #0b0f19;
+    font-size: 24pt;
+    margin-bottom: 4px;
+    border-bottom: 3px solid #ff6b00;
+    padding-bottom: 8px;
+  }
+  h2 {
+    color: #0b0f19;
+    font-size: 15pt;
+    margin-top: 24px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 4px;
+    page-break-after: avoid;
+  }
+  h3 {
+    color: #334155;
+    font-size: 12pt;
+    margin-top: 16px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+  }
+  .subtitle {
+    color: #64748b;
+    font-size: 12pt;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+  .tagline {
+    background: #f8fafc;
+    border-left: 4px solid #ff6b00;
+    padding: 10px 14px;
+    margin-bottom: 24px;
+    font-size: 10.5pt;
+    color: #334155;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 20px 0;
+    font-size: 10pt;
+    page-break-inside: avoid;
+  }
+  th, td {
+    border: 1px solid #cbd5e1;
+    padding: 8px 10px;
+    text-align: left;
+  }
+  th {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    font-weight: 600;
+  }
+  tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+  .card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 14px;
+    page-break-inside: avoid;
+  }
+  .card-header {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 11pt;
+    margin-bottom: 6px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 8.5pt;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .badge-solana { background: #ede9fe; color: #6d28d9; }
+  .badge-rust { background: #fee2e2; color: #b91c1c; }
+  .badge-rn { background: #e0f2fe; color: #0369a1; }
+  code {
+    background: #f1f5f9;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 9.5pt;
+    color: #b91c1c;
+  }
+  pre {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 9pt;
+    overflow-x: auto;
+    page-break-inside: avoid;
+  }
+  ul, ol {
+    margin-top: 4px;
+    margin-bottom: 12px;
+    padding-left: 20px;
+  }
+  li {
+    margin-bottom: 4px;
+  }
+  .viva-box {
+    background: #fefce8;
+    border: 1px solid #fef08a;
+    border-left: 4px solid #ca8a04;
+    padding: 10px 14px;
+    margin: 10px 0;
+    border-radius: 4px;
+    page-break-inside: avoid;
+  }
+  .viva-q {
+    font-weight: 700;
+    color: #713f12;
+    margin-bottom: 4px;
+  }
+  .viva-a {
+    color: #1e293b;
+    font-size: 10pt;
+  }
+  .page-break {
+    page-break-before: always;
+  }
+  .footer {
+    text-align: center;
+    font-size: 8.5pt;
+    color: #94a3b8;
+    margin-top: 30px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+  <!-- PAGE 1: TITLE & EXECUTIVE SUMMARY -->
+  <h1>PROOF OF THOUGHT</h1>
+  <p class="subtitle">Decentralized Intellectual Property & Cryptographic Content Verification System</p>
+  
+  <div class="tagline">
+    <strong>Project Scope:</strong> A production-grade Solana Mobile dApp (React Native 0.83 / Expo 55) integrating 
+    <strong>Rust/Anchor smart contracts</strong>, <strong>Metaplex Digital Asset Standard NFTs</strong>, and <strong>SHA-256 tamper-evident IPFS storage</strong>.
+  </div>
+
+  <h2>1. Executive Summary & Problem Statement</h2>
+  <p>
+    In traditional social platforms and digital note-taking apps, content timestamping and author attribution are managed by centralized servers that can alter records, censor posts, or shut down. 
+    <strong>Proof of Thought</strong> solves this by allowing users to capture ideas (via formatted text or raw voice memos), publish them to decentralized storage (IPFS), and mint an immutable on-chain certificate of ownership on the Solana blockchain.
+  </p>
+  <p>
+    Unlike conventional NFT projects that simply point a token to an off-chain URL, our architecture introduces an <strong>Anchor On-Chain Registry</strong>. Every thought is cryptographically hashed with SHA-256 and committed to a Program Derived Address (PDA) on-chain. This provides mathematical, mathematically tamper-evident proof that a specific piece of text or audio existed at a specific slot timestamp under the author's public key.
+  </p>
+
+  <h2>2. Architectural Justification: Solana vs. Ethereum</h2>
+  <p>
+    A frequent examiner question is: <em>"Why build this on Solana rather than Ethereum / Polygon?"</em> 
+    Our technical choice was driven by three concrete engineering requirements:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Evaluation Factor</th>
+        <th>Solana (Our Choice)</th>
+        <th>Ethereum (EVM)</th>
+        <th>Engineering Justification</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Mobile Integration</strong></td>
+        <td><strong>Native MWA Protocol</strong><br>Direct Android Intent sessions</td>
+        <td>WalletConnect v2<br>Relay servers, bridge latency</td>
+        <td>Solana Mobile Stack (SMS) allows zero-relay, local socket communication directly with Phantom/Solflare on Android devices.</td>
+      </tr>
+      <tr>
+        <td><strong>Transaction Cost</strong></td>
+        <td><strong>&lt; $0.0008 per mint</strong><br>(Rent-exempt account: ~0.001 SOL)</td>
+        <td>$2.00 – $15.00+ Gas fees<br>(L2s: $0.05 – $0.20)</td>
+        <td>A consumer journaling app cannot require users to spend dollars just to record a thought. Solana transaction costs enable real micro-minting.</td>
+      </tr>
+      <tr>
+        <td><strong>Finality Speed</strong></td>
+        <td><strong>~400 ms slot time</strong><br>(Optimistic confirmation in &lt;1s)</td>
+        <td>12 – 15 seconds<br>(Finality: ~12 minutes)</td>
+        <td>Mobile users expect instantaneous feedback when tapping "Mint as NFT". Solana gives sub-second UX parity with Web2 apps.</td>
+      </tr>
+      <tr>
+        <td><strong>State Architecture</strong></td>
+        <td><strong>Seeded Account PDAs</strong><br>Deterministic lookup without gas loops</td>
+        <td>Contract mapping lookups<br>Scales contract storage costs</td>
+        <td>Solana Program Derived Addresses (PDAs) allow our verification client to derive the account address mathematically in O(1) time without querying large event logs.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- PAGE BREAK -->
+  <div class="page-break"></div>
+
+  <h2>3. System Architecture & Dual-Layer Verification</h2>
+  <p>The app executes a dual-layer on-chain flow to ensure complete authenticity without expensive blockchain storage bloat:</p>
+
+  <pre>
+  +---------------------------------------------------------------------------------+
+  |                             REACT NATIVE CLIENT (ANDROID)                       |
+  |  1. Text Input (max 280 chars) OR Voice Recording (.m4a via expo-audio)        |
+  +---------------------------------------+-----------------------------------------+
+                                          |
+                      Upload File & JSON  |  
+                                          v
+  +---------------------------------------------------------------------------------+
+  |                       OFF-CHAIN IPFS STORAGE (PINATA)                           |
+  |  • Stores raw .m4a audio file & metadata JSON: { thought, author, timestamp }   |
+  |  • Returns immutable Content Identifier (CID) Gateway URI                       |
+  +---------------------------------------+-----------------------------------------+
+                                          |
+                        Mint NFT via MWA  |  (Phantom Signs Tx)
+                                          v
+  +---------------------------------------------------------------------------------+
+  |                         SOLANA DEVNET BLOCKCHAIN                                |
+  |                                                                                 |
+  |  [Layer 1: Metaplex Token Metadata]                                             |
+  |  • Mints POT NFT with uri -> IPFS gateway link                                  |
+  |  • Assigns on-chain ownership to User Wallet                                    |
+  |                                                                                 |
+  |  [Layer 2: Custom Anchor Thought Registry]                                      |
+  |  • Instruction: register_thought(content_hash: [u8; 32])                         |
+  |  • Derives PDA Account: seeds = ["thought", mint_pubkey]                        |
+  |  • Stores: { author: Pubkey, mint: Pubkey, content_hash: [u8; 32], clock: i64 } |
+  +---------------------------------------------------------------------------------+
+  </pre>
+
+  <h3>Why not store the raw text directly in Solana account data?</h3>
+  <ul>
+    <li><strong>Rent-Exemption Economics:</strong> Solana charges rent based on byte size (~0.00089 SOL per 100 bytes). Storing raw paragraphs or audio would quickly cost 0.05–0.5 SOL per thought.</li>
+    <li><strong>Cryptographic Solution:</strong> By hashing the text into a fixed 32-byte SHA-256 digest (<code>[u8; 32]</code>), we achieve 100% tamper resistance for exactly 113 bytes of account data, costing less than $0.001.</li>
+  </ul>
+
+  <h2>4. Three-Person Engineering Division (College Defense)</h2>
+
+  <div class="card">
+    <div class="card-header">
+      Student 1: Blockchain & Smart Contract Lead
+      <span class="badge badge-rust">Rust / Anchor / Solana</span>
+    </div>
+    <ul>
+      <li><strong>Artifact:</strong> <code>programs/thought-registry/src/lib.rs</code> & <code>Cargo.toml</code></li>
+      <li><strong>Core Responsibility:</strong> Designed the custom Anchor program on Solana. Defined the <code>ThoughtRecord</code> PDA struct, derived seeds (<code>[b"thought", mint.key().as_ref()]</code>), and implemented the <code>register_thought</code> instruction.</li>
+      <li><strong>Client Integration:</strong> Authored <code>utils/anchorClient.ts</code>, handling transaction serialization and MWA signer pass-through.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      Student 2: Cryptographic Verification & Storage Engineer
+      <span class="badge badge-solana">Web3 / IPFS / Cryptography</span>
+    </div>
+    <ul>
+      <li><strong>Artifact:</strong> <code>screens/ThoughtDetailScreen.tsx</code>, <code>utils/verifyThought.ts</code>, <code>utils/hashThought.ts</code>, <code>utils/ipfs.ts</code></li>
+      <li><strong>Core Responsibility:</strong> Built the on-chain verification engine that queries the PDA from Solana RPC, parses the 32-byte stored digest at byte offset 72, recalculates the SHA-256 hash client-side, and dynamically triggers the glowing <code>[✓ VERIFIED ON-CHAIN]</code> badge.</li>
+      <li><strong>Storage Pipeline:</strong> Configured multipart voice and JSON metadata pinning to Pinata IPFS.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      Student 3: Mobile Architecture & Design Systems Lead
+      <span class="badge badge-rn">React Native / Expo / Android</span>
+    </div>
+    <ul>
+      <li><strong>Artifact:</strong> <code>stores/walletStore.tsx</code>, <code>components/PixelCard.tsx</code>, <code>components/PixelButton.tsx</code>, <code>components/ErrorBanner.tsx</code>, Android Gradle & APK Pipeline</li>
+      <li><strong>Core Responsibility:</strong> Integrated the Solana Mobile Wallet Adapter (MWA) for Phantom intent authentication. Built the retro cyberpunk component library (PressStart2P typography, scanline aesthetics).</li>
+      <li><strong>Build Engineering:</strong> Resolved NDK C++ dependencies, Hermes compilation, and assembled the standalone release APK (<code>app-release.apk</code>).</li>
+    </ul>
+  </div>
+
+  <!-- PAGE BREAK -->
+  <div class="page-break"></div>
+
+  <h2>5. Comprehensive Viva Voce Questions & Model Answers</h2>
+
+  <div class="viva-box">
+    <div class="viva-q">Q1. What is a PDA (Program Derived Address) and why is it essential here?</div>
+    <div class="viva-a">
+      A PDA is an address generated deterministically from seeds (<code>b"thought"</code> + the NFT mint public key) and the Program ID that intentionally falls off the Ed25519 elliptic curve. Because it has no private key, only our smart contract code has the authority to initialize or write to it via cross-program invocation. This guarantees no third party can forge a thought record.
+    </div>
+  </div>
+
+  <div class="viva-box">
+    <div class="viva-q">Q2. What happens if someone tampers with the thought text on IPFS?</div>
+    <div class="viva-a">
+      When a user opens the Thought Detail screen, the app fetches the IPFS text and computes its SHA-256 hash. It simultaneously fetches the PDA from Solana devnet and reads the stored hash. Because SHA-256 is collision-resistant, altering even a single comma changes the output digest completely, causing the verification check to fail and displaying a red <code>[UNVERIFIED / TAMPERED]</code> warning.
+    </div>
+  </div>
+
+  <div class="viva-box">
+    <div class="viva-q">Q3. Why did you use Mobile Wallet Adapter (MWA) instead of holding a keypair in the app?</div>
+    <div class="viva-a">
+      Security best practices dictate that dApps must never touch raw user private keys. MWA uses local Android Intent communication to request transaction signatures from dedicated hardware/software wallets like Phantom. The user reviews the exact simulation and fee in Phantom, approves it, and returns only the cryptographic signature to our app.
+    </div>
+  </div>
+
+  <div class="viva-box">
+    <div class="viva-q">Q4. How do you query thoughts without scanning the entire blockchain?</div>
+    <div class="viva-a">
+      We utilize Metaplex's Digital Asset Standard (DAS) RPC indexer (<code>getAssetsByOwner</code> and <code>getAssetsByCreator</code>). Standard Solana <code>getProgramAccounts</code> calls are bandwidth-heavy and rate-limited. DAS endpoints maintain off-chain indexed tables of token metadata, allowing instant filtering by symbol <code>POT</code> and creator address.
+    </div>
+  </div>
+
+  <div class="viva-box">
+    <div class="viva-q">Q5. Explain the account data layout of your ThoughtRecord struct.</div>
+    <div class="viva-a">
+      The account allocated space is exactly 113 bytes: 8 bytes for Anchor's internal account discriminator, 32 bytes for the author's public key, 32 bytes for the NFT mint address, 32 bytes for the SHA-256 digest, 8 bytes for the Unix clock timestamp (<code>i64</code>), and 1 byte for the PDA bump seed.
+    </div>
+  </div>
+
+  <div class="viva-box">
+    <div class="viva-q">Q6. How is your APK compiled and why can't this run on Expo Go?</div>
+    <div class="viva-a">
+      Our app uses low-level native Android libraries: <code>expo-audio</code> for hardware microphone streams, <code>@shopify/react-native-skia</code> which links compiled C++ Skia 2D rendering engines, and Solana MWA native intent handlers. Expo Go is an interpreted sandbox that does not include these custom native modules. We used <code>expo prebuild</code> and Gradle 8.13 to compile directly to an ARM64 native APK.
+    </div>
+  </div>
+
+  <div class="footer">
+    Proof of Thought — Final Year / College Blockchain Project Manual — Distributed Systems & Smart Contracts Lab
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Proof of Thought — Complete End-to-End System Guide</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 14mm 18mm 14mm;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1e293b;
+    line-height: 1.6;
+    font-size: 10.5pt;
+    margin: 0;
+    padding: 0;
+  }
+  .header {
+    border-bottom: 3px solid #ff6b00;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+  }
+  h1 {
+    color: #0f172a;
+    font-size: 22pt;
+    margin: 0 0 4px 0;
+  }
+  .subtitle {
+    color: #64748b;
+    font-size: 11pt;
+    margin: 0;
+  }
+  .highlight-box {
+    background: #f8fafc;
+    border-left: 4px solid #ff6b00;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 10pt;
+  }
+  h2 {
+    color: #0f172a;
+    font-size: 14pt;
+    margin-top: 24px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 4px;
+    page-break-after: avoid;
+  }
+  .card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    page-break-inside: avoid;
+  }
+  .card-title {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 11.5pt;
+    margin-bottom: 6px;
+  }
+  .analogy {
+    background: #fefce8;
+    border: 1px solid #fef08a;
+    border-left: 4px solid #ca8a04;
+    padding: 8px 12px;
+    margin: 8px 0;
+    border-radius: 4px;
+    font-size: 9.5pt;
+    color: #713f12;
+  }
+  ul, ol {
+    margin-top: 4px;
+    margin-bottom: 10px;
+    padding-left: 20px;
+  }
+  li {
+    margin-bottom: 4px;
+  }
+  code {
+    background: #f1f5f9;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    font-size: 9pt;
+    color: #b91c1c;
+  }
+  .page-break {
+    page-break-before: always;
+  }
+  .footer {
+    text-align: center;
+    font-size: 8.5pt;
+    color: #94a3b8;
+    margin-top: 26px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Proof of Thought — Complete End-to-End System Guide</h1>
+    <p class="subtitle">A Plain-English Architectural Breakdown: Wallet Handshake, IPFS Storage, Metaplex NFTs, Anchor Proofs, and Escrow Marketplace</p>
+  </div>
+
+  <div class="highlight-box">
+    <strong>In One Sentence:</strong> Proof of Thought is a decentralized mobile app where users turn raw ideas, poems, or voice recordings into on-chain digital assets (NFTs) on Solana, verify their mathematical integrity using cryptographic hashes, and trade intellectual property peer-to-peer using trustless smart contract escrows.
+  </div>
+
+  <h2>1. Connecting the Wallet (Solana Mobile Wallet Adapter)</h2>
+  <div class="card">
+    <div class="card-title">How It Works Under the Hood</div>
+    <p>
+      When a user taps <strong>Connect Wallet</strong>, the app never asks for passwords, seed phrases, or private keys. Doing so would be a massive security hazard.
+    </p>
+    <div class="analogy">
+      <strong>Real-World Analogy:</strong> Think of tapping "Sign in with Google" on your phone. The app doesn't see your Google password; Android opens your Google account in a safe popup, confirms your identity, and hands the app only your name.
+    </div>
+    <p><strong>Technical Steps:</strong></p>
+    <ol>
+      <li>Our app fires an <strong>Android Intent</strong> (a secure inter-app message inside Android OS).</li>
+      <li>Android spots Phantom installed on the device and brings it to the front.</li>
+      <li>Phantom asks the user: <em>"Connect to Proof of Thought?"</em></li>
+      <li>Upon approval, Phantom returns only the user's <strong>Public Key</strong> (their public account address, like <code>8fCUzq...</code>).</li>
+      <li>The app stores this address in local phone storage so the user stays logged in. The secret private key stays safely locked inside Phantom's encrypted vault.</li>
+    </ol>
+  </div>
+
+  <h2>2. Off-Chain Decentralized Storage (IPFS & Pinata Cloud)</h2>
+  <div class="card">
+    <div class="card-title">Why IPFS? Why Not Store Everything on Solana?</div>
+    <p>
+      On Solana, storing data costs a fee called <strong>Rent</strong> based on byte size. Storing a 10-second voice recording (200 KB) directly on the blockchain would cost real money every time someone speaks. It is economically impractical.
+    </p>
+    <div class="analogy">
+      <strong>Real-World Analogy (The Library):</strong> Normal web links (HTTP) are like street addresses: <em>"Book is at Shelf 4, Room B in the city library."</em> If the library closes or moves the book, the link breaks. <strong>IPFS</strong> works by content fingerprints: it hashes the audio file into a unique fingerprint called a <strong>CID</strong>. No matter where the file travels across the world, that fingerprint only matches that exact recording. If anyone edits even one second of audio, the fingerprint changes completely.
+    </div>
+    <p><strong>Where Pinata Comes In:</strong></p>
+    <p>
+      IPFS is a decentralized peer-to-peer network. If nobody is actively hosting a file, it can become temporarily unavailable. 
+      <strong>Pinata</strong> is a specialized pinning service that ensures our audio files and metadata JSON cards stay seeded and available on IPFS 24 hours a day, 7 days a week.
+    </p>
+  </div>
+
+  <!-- PAGE BREAK -->
+  <div class="page-break"></div>
+
+  <h2>3. Minting the NFT on Solana (Metaplex Standard)</h2>
+  <div class="card">
+    <div class="card-title">From IPFS Link to Digital Ownership</div>
+    <p>
+      After the thought text and voice audio are uploaded to IPFS, the user taps <strong>Mint as NFT</strong>:
+    </p>
+    <ol>
+      <li>Our app uses the official Solana NFT standard, <strong>Metaplex Umi</strong> (<code>mpl-token-metadata</code>).</li>
+      <li>It prepares an on-chain instruction package that creates a unique digital token with a total supply of exactly <strong>1</strong> (making it Non-Fungible).</li>
+      <li>It sets the symbol to <strong>POT</strong> (Proof of Thought) and sets the permanent metadata URI to our Pinata IPFS link.</li>
+      <li>Phantom opens on the user's phone, requesting approval for the network fee (~0.01 Devnet SOL).</li>
+      <li>The user slides to confirm. Solana validators execute the transaction in ~400 milliseconds.</li>
+      <li><strong>Result:</strong> The user's wallet is now the undisputed on-chain owner of that thought NFT.</li>
+    </ol>
+  </div>
+
+  <h2>4. Cryptographic Proof & Integrity (Anchor Smart Contract)</h2>
+  <div class="card">
+    <div class="card-title">Why the NFT Alone Isn't Enough</div>
+    <p>
+      An NFT's metadata link points to an off-chain file. To guarantee that nobody can ever tamper with the thought text or claim it was altered later, we introduced an on-chain verification layer.
+    </p>
+    <p><strong>How the Proof Works:</strong></p>
+    <ol>
+      <li>The app runs the thought text through a <strong>SHA-256 mathematical algorithm</strong>, creating an irreversible 32-byte fingerprint.</li>
+      <li>Our custom smart contract written in <strong>Rust</strong> (using the <strong>Anchor</strong> framework) allocates a <strong>Program Derived Address (PDA)</strong> on Solana linked specifically to that NFT mint.</li>
+      <li>It records the author's public key, the exact 32-byte hash, and the blockchain clock timestamp.</li>
+      <li><strong>Verification:</strong> Whenever any user opens the thought card, the phone recalculates the SHA-256 hash locally and compares it with the on-chain account. If they match, the screen displays the glowing <strong><code>[✓ VERIFIED ON-CHAIN]</code></strong> badge!</li>
+    </ol>
+  </div>
+
+  <h2>5. The Marketplace & Trustless Escrow (Buying and Selling IP)</h2>
+  <div class="card">
+    <div class="card-title">How Digital Ideas and Music Are Bought Peer-to-Peer</div>
+    <div class="analogy">
+      <strong>The Escrow Locker Analogy:</strong> If you sell a bike on the street, the buyer fears sending money first (you might run away), and you fear giving the bike first (they might steal it). An <strong>Escrow</strong> is a locked safety box. You place the bike in the box. The buyer puts the cash in the box. Once both are inside, the box unlocks automatically and gives the bike to the buyer and the cash to you. Nobody can cheat.
+    </div>
+    <p><strong>Step-by-Step Marketplace Flow:</strong></p>
+    <ul>
+      <li><strong>Listing (Seller):</strong> The creator opens their thought, taps <strong>List for Sale</strong>, enters a price in SOL (e.g. <code>0.05 SOL</code>), and signs in Phantom. The NFT is placed into the smart contract's escrow account.</li>
+      <li><strong>Discovery (Public Feed):</strong> Browsing users see the thought with a cyan price tag: <code>[ 0.05 SOL ]</code>.</li>
+      <li><strong>Atomic Purchase (Buyer):</strong> When a buyer taps <strong>Buy IP Rights</strong> and confirms in Phantom, the smart contract performs an <strong>Atomic Swap</strong>:
+        <ol>
+          <li>The 0.05 SOL is transferred from buyer to seller.</li>
+          <li>The NFT token is unlocked from escrow and transferred into the buyer's wallet.</li>
+          <li>The thought moves to the buyer's <strong>"My Thoughts"</strong> tab, while the history permanently credits the original author.</li>
+        </ol>
+      </li>
+      <li><strong>Cancel Listing:</strong> If the seller changes their mind before anyone buys it, they can tap <strong>Cancel Listing</strong>, and the smart contract immediately returns the NFT to their wallet.</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    Proof of Thought — Complete Technical Reference Manual
+  </div>
+
+</body>
+</html>
