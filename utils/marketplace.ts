@@ -10,8 +10,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThoughtData } from '../types/thought';
 import { PROGRAM_ID } from './verifyThought';
 
-// Official Solana Memo Program v2
-export const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
+// Memo v1. v2 rejects the instruction unless every listed account signs.
+// The seller's phone cannot sign the buyer's purchase, so v1 is required.
+export const MEMO_PROGRAM_ID = new PublicKey('Memo1UhkJRfHyvLMcVucJwxXeuD728EqVDDwQDxFMNo');
 
 // Shared Marketplace hub address
 export const MARKETPLACE_HUB = new PublicKey('8fCUzqY4XYj7Gkc8PGkumb58iiecS9bWX9mmjnPRdRS6');
@@ -44,9 +45,8 @@ export function getListingPda(mintPublicKey: PublicKey): [PublicKey, number] {
 }
 
 export function formatSol(amount: number): string {
-  if (amount >= 1) return amount.toFixed(2);
-  if (amount >= 0.01) return amount.toFixed(3);
-  return amount.toFixed(4);
+  const text = amount.toFixed(4).replace(/\.?0+$/, '');
+  return text.length > 0 ? text : '0';
 }
 
 export async function fetchTokenOwner(

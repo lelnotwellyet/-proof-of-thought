@@ -17,8 +17,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useWalletStore } from '../stores/walletStore';
 import { uploadThoughtToIPFS } from '../utils/ipfs';
 import { mintThoughtNFT } from '../utils/mintNft';
-import { hashThought } from '../utils/hashThought';
-import { registerThought } from '../utils/anchorClient';
 import { useAudioRecorder, RecordingPresets } from 'expo-audio';
 import { uploadAudioToIPFS, requestMicPermission } from '../utils/audio';
 import { styles } from './WriteThoughtScreen.styles';
@@ -112,18 +110,9 @@ export default function WriteThoughtScreen() {
       };
       const thoughtText = thought || '🎙️ Voice thought';
       const mintAddress = await mintThoughtNFT(walletAdapter, ipfsUrl, thoughtText);
-      const hash = hashThought(thoughtText);
-      let registryNote = 'Verified & recorded on Solana Devnet.';
-      try {
-        const pda = await registerThought(walletAdapter, mintAddress, hash);
-        registryNote = `Proof PDA:\n${pda}`;
-      } catch (registryError) {
-        // Fallback to confirmed Metaplex on-chain proof
-        registryNote = 'On-chain NFT verified & recorded on Devnet.';
-      }
       Alert.alert(
         'NFT MINTED 🎉',
-        `Your thought is now permanent!\n\nMint:\n${mintAddress}\n\n${registryNote}`,
+        `Your thought is now permanent!\n\nMint:\n${mintAddress}`,
         [
           {
             text: 'View on Explorer',

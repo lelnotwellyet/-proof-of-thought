@@ -1,7 +1,7 @@
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { mplTokenMetadata, createNft } from '@metaplex-foundation/mpl-token-metadata';
 import { createSignerFromWalletAdapter } from '@metaplex-foundation/umi-signer-wallet-adapters';
-import { generateSigner, percentAmount } from '@metaplex-foundation/umi';
+import { generateSigner, percentAmount, publicKey } from '@metaplex-foundation/umi';
 import { clusterApiUrl } from '@solana/web3.js';
 
 export const mintThoughtNFT = async (

@@ -45,7 +45,7 @@ export default function ThoughtDetailScreen() {
   const [priceSol, setPriceSol] = useState(thought?.priceSol);
   const [seller, setSeller] = useState(thought?.sellerAddress || '');
   const [listOpen, setListOpen] = useState(false);
-  const [priceInput, setPriceInput] = useState('0.05');
+  const [priceInput, setPriceInput] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -295,16 +295,22 @@ export default function ThoughtDetailScreen() {
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <Text style={styles.headerTitle}>LIST FOR SALE</Text>
-            <Text style={styles.label}>PRICE IN SOL</Text>
+            <Text style={styles.label}>TYPE ANY PRICE IN SOL</Text>
             <TextInput
               style={styles.priceInput}
               value={priceInput}
               onChangeText={setPriceInput}
               keyboardType="decimal-pad"
-              placeholder="0.05"
-              placeholderTextColor="#3D2F6B"
+              placeholder="e.g. 0.2"
+              placeholderTextColor="#6b5a3a"
+              autoFocus
             />
-            <PixelButton label="CONFIRM LISTING" onPress={handleList} loading={busy} />
+            <PixelButton
+              label={Number(priceInput) > 0 ? `LIST FOR ${priceInput} SOL` : 'ENTER A PRICE'}
+              onPress={handleList}
+              loading={busy}
+              disabled={!(Number(priceInput) > 0)}
+            />
             <PixelButton
               label="CLOSE"
               variant="outline"
