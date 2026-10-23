@@ -66,7 +66,16 @@ export async function fetchTokenOwner(
   }
 }
 
-async function sendSigned(
+/** Splits a signature's `memo` field ("[len] text; [len] text") into clean memo strings. */
+export function parseMemos(memo: string | null | undefined): string[] {
+  if (!memo) return [];
+  return memo
+    .split(/;\s*(?=\[\d+\])/)
+    .map((part) => part.replace(/^\[\d+\]\s*/, '').trim())
+    .filter(Boolean);
+}
+
+export async function sendSigned(
   connection: Connection,
   wallet: WalletSigner,
   tx: Transaction
@@ -214,6 +223,7 @@ export async function applyListingState(
   }
 }
 
+/** @deprecated Fixed-price listings are replaced by bidding (utils/bidding.ts). Kept for old listings. */
 export async function createListing(
   wallet: WalletSigner,
   connection: Connection,
@@ -257,6 +267,7 @@ export async function createListing(
   return signature;
 }
 
+/** @deprecated Replaced by placeBid/acceptBid/settleBid in utils/bidding.ts. */
 export async function buyThought(
   wallet: WalletSigner,
   connection: Connection,

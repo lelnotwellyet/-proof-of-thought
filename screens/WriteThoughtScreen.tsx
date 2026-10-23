@@ -17,11 +17,21 @@ import { useNavigation } from '@react-navigation/native';
 import { useWalletStore } from '../stores/walletStore';
 import { uploadThoughtToIPFS } from '../utils/ipfs';
 import { mintThoughtNFT } from '../utils/mintNft';
-import { useAudioRecorder, RecordingPresets } from 'expo-audio';
-import { uploadAudioToIPFS, requestMicPermission } from '../utils/audio';
 import { styles } from './WriteThoughtScreen.styles';
 
 const MAX_CHARS = 280;
+const MIN_CHARS = 3;
+
+/** Returns an error message, or null when the thought can be uploaded and minted. */
+export function validateThought(text: string): string | null {
+  const trimmed = text.trim();
+  if (!trimmed) return 'Write something first.';
+  if (trimmed.length < MIN_CHARS) return `A thought needs at least ${MIN_CHARS} characters.`;
+  if (trimmed.length > MAX_CHARS) return `Keep it under ${MAX_CHARS} characters.`;
+  // Must contain at least one letter or number, not just spaces/symbols.
+  if (!/[\p{L}\p{N}]/u.test(trimmed)) return 'Use at least one letter or number.';
+  return null;
+}
 
 export default function WriteThoughtScreen() {
   const navigation = useNavigation<any>();
@@ -29,45 +39,17 @@ export default function WriteThoughtScreen() {
   const [thought, setThought] = useState('');
   const [uploading, setUploading] = useState(false);
   const [ipfsUrl, setIpfsUrl] = useState<string | null>(null);
-  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-  const [isRecording, setIsRecording] = useState(false);
-  const [audioUri, setAudioUri] = useState<string | null>(null);
-  const [audioIpfsUrl, setAudioIpfsUrl] = useState<string | null>(null);
+  // The exact text that went to IPFS; minting is only allowed for that text.
+  const [uploadedText, setUploadedText] = useState<string | null>(null);
+  const [minted, setMinted] = useState(false);
+  const validationError = validateThought(thought);
 
   const charsLeft = MAX_CHARS - thought.length;
   const charsUsedPercent = (thought.length / MAX_CHARS) * 100;
 
-  const handleStartRecording = async () => {
-    try {
-      const granted = await requestMicPermission();
-      if (!granted) {
-        Alert.alert('Permission denied', 'Microphone permission is required.');
-        return;
-      }
-      await audioRecorder.prepareToRecordAsync();
-      audioRecorder.record();
-      setIsRecording(true);
-      setAudioUri(null);
-      setAudioIpfsUrl(null);
-    } catch (e) {
-      Alert.alert('Recording failed', 'Could not start recording.');
-    }
-  };
-
-  const handleStopRecording = async () => {
-    try {
-      await audioRecorder.stop();
-      setIsRecording(false);
-      const uri = audioRecorder.uri;
-      if (uri) setAudioUri(uri);
-    } catch (e) {
-      Alert.alert('Recording failed', 'Could not stop recording.');
-    }
-  };
-
   const handleUpload = async () => {
-    if (!thought.trim() && !audioUri) {
-      Alert.alert('ADD A THOUGHT', 'Write something or record your voice first.');
+    if (validationError) {
+      Alert.alert('INVALID THOUGHT', validationError);
       return;
     }
     if (!publicKey) {
@@ -76,20 +58,15 @@ export default function WriteThoughtScreen() {
     }
     setUploading(true);
     try {
-      let uploadedAudioUrl: string | undefined;
-      if (audioUri) {
-        uploadedAudioUrl = await uploadAudioToIPFS(audioUri);
-        setAudioIpfsUrl(uploadedAudioUrl);
-      }
       const url = await uploadThoughtToIPFS({
         name: `Proof of Thought #${Date.now()}`,
         description: 'A thought minted on Solana via Proof of Thought app',
-        thought: thought.trim() || '🎙️ Voice thought',
+        thought: thought.trim(),
         timestamp: new Date().toISOString(),
         author: publicKey.toString(),
-        audioUri: uploadedAudioUrl,
       });
       setIpfsUrl(url);
+      setUploadedText(thought.trim());
       Alert.alert('UPLOADED ✅', `Your thought is now on IPFS.\n\n${url}`);
     } catch (e) {
       Alert.alert('UPLOAD FAILED', 'Something went wrong. Try again.');
@@ -99,7 +76,19 @@ export default function WriteThoughtScreen() {
   };
 
   const handleMint = async () => {
-    if (!ipfsUrl || !publicKey) return;
+    if (!publicKey) {
+      Alert.alert('NOT CONNECTED', 'Connect your wallet first.');
+      return;
+    }
+    if (minted) return;
+    if (!ipfsUrl || uploadedText === null || uploadedText !== thought.trim()) {
+      Alert.alert('UPLOAD FIRST', 'Upload this exact thought to IPFS before minting.');
+      return;
+    }
+    if (validateThought(uploadedText)) {
+      Alert.alert('INVALID THOUGHT', validateThought(uploadedText)!);
+      return;
+    }
     setUploading(true);
     try {
       const walletStore = useWalletStore.getState();
@@ -108,8 +97,8 @@ export default function WriteThoughtScreen() {
         signTransaction: walletStore.signTransaction,
         signAllTransactions: walletStore.signAllTransactions,
       };
-      const thoughtText = thought || '🎙️ Voice thought';
-      const mintAddress = await mintThoughtNFT(walletAdapter, ipfsUrl, thoughtText);
+      const mintAddress = await mintThoughtNFT(walletAdapter, ipfsUrl, uploadedText);
+      setMinted(true);
       Alert.alert(
         'NFT MINTED 🎉',
         `Your thought is now permanent!\n\nMint:\n${mintAddress}`,
@@ -165,7 +154,16 @@ export default function WriteThoughtScreen() {
               placeholder="Type your thought here..."
               placeholderTextColor="#3D2F6B"
               value={thought}
-              onChangeText={(t) => t.length <= MAX_CHARS && setThought(t)}
+              editable={!minted && !uploading}
+              onChangeText={(t) => {
+                if (t.length > MAX_CHARS) return;
+                setThought(t);
+                // Editing after upload invalidates the IPFS copy.
+                if (ipfsUrl && t.trim() !== uploadedText) {
+                  setIpfsUrl(null);
+                  setUploadedText(null);
+                }
+              }}
               multiline
             />
             <View style={styles.progressTrack}>
@@ -179,35 +177,12 @@ export default function WriteThoughtScreen() {
                 ]}
               />
             </View>
+            {thought.length > 0 && validationError && (
+              <Text style={[styles.charCount, styles.charCountWarning]}>{validationError.toUpperCase()}</Text>
+            )}
             <Text style={[styles.charCount, charsLeft < 20 && styles.charCountWarning]}>
               {charsLeft} CHARS LEFT
             </Text>
-          </View>
-
-          <View style={styles.divider} />
-
-          {/* Voice recording — always visible */}
-          <Text style={styles.sectionLabel}>// VOICE INPUT</Text>
-          <View style={styles.voiceBox}>
-            <TouchableOpacity
-              style={isRecording ? styles.voiceBtnStop : styles.voiceBtn}
-              onPress={isRecording ? handleStopRecording : handleStartRecording}
-            >
-              <Text style={styles.voiceBtnText}>
-                {isRecording ? '> REC STOP_' : '> REC START_'}
-              </Text>
-            </TouchableOpacity>
-            {isRecording && (
-              <Text style={styles.recordingLabel}>● RECORDING...</Text>
-            )}
-            {audioUri && !isRecording && (
-              <View style={styles.audioReady}>
-                <Text style={styles.audioReadyText}>✓ VOICE CAPTURED</Text>
-                <TouchableOpacity onPress={() => setAudioUri(null)}>
-                  <Text style={styles.retakeText}>[ RETAKE ]</Text>
-                </TouchableOpacity>
-              </View>
-            )}
           </View>
 
           <View style={styles.divider} />
@@ -250,9 +225,9 @@ export default function WriteThoughtScreen() {
 
           {/* Action button */}
           <TouchableOpacity
-            style={[styles.actionBtnWrapper, uploading && styles.actionBtnDisabled]}
+            style={[styles.actionBtnWrapper, (uploading || minted || !!validationError) && styles.actionBtnDisabled]}
             onPress={ipfsUrl ? handleMint : handleUpload}
-            disabled={uploading}
+            disabled={uploading || minted || !!validationError}
             activeOpacity={0.85}
           >
             <LinearGradient
@@ -263,7 +238,7 @@ export default function WriteThoughtScreen() {
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
                 <Text style={styles.actionBtnText}>
-                  {ipfsUrl ? '> MINT AS NFT_' : '> UPLOAD TO IPFS_'}
+                  {minted ? '✓ MINTED' : ipfsUrl ? '> MINT AS NFT_' : '> UPLOAD TO IPFS_'}
                 </Text>
               )}
             </LinearGradient>

@@ -53,6 +53,22 @@ export const styles = StyleSheet.create({
   ownedText: { color: colors.primary },
   ownedBadge: { borderColor: colors.primary, backgroundColor: colors.primaryDim },
   action: { marginTop: spacing.md },
+  bidsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  syncBtn: {
+    borderWidth: 1,
+    borderColor: colors.accent,
+    backgroundColor: colors.accentDim,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  syncBtnText: { fontFamily: fonts.pixel, fontSize: 6, color: colors.accent },
+  badgeRow: { flexDirection: 'row', marginTop: spacing.md },
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.72)',

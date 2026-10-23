@@ -24,7 +24,8 @@ export const mintThoughtNFT = async (
       mint,
       name: `Proof of Thought`,
       uri: ipfsUrl,
-      sellerFeeBasisPoints: percentAmount(0),
+      // 5% (500 basis points) resale royalty to the minter; paid out in settleBid().
+      sellerFeeBasisPoints: percentAmount(5),
       symbol: 'POT',
       creators: [
         { address: publicKey(CREATOR_ADDRESS), verified: false, share: 0 },

@@ -103,68 +103,6 @@ export const styles = StyleSheet.create({
     opacity: 0.6,
   },
 
-  // Voice box — now clearly visible
-  voiceBox: {
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    marginBottom: spacing.xs,
-    backgroundColor: 'rgba(13,10,30,0.95)',
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: radius.sm,
-    padding: spacing.md,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  voiceBtn: {
-    backgroundColor: 'rgba(255,107,0,0.15)',
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: radius.sm,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-  },
-  voiceBtnStop: {
-    backgroundColor: 'rgba(204,34,0,0.15)',
-    borderWidth: 1,
-    borderColor: '#cc2200',
-    borderRadius: radius.sm,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-  },
-  voiceBtnText: {
-    fontFamily: fonts.pixel,
-    fontSize: 9,
-    color: colors.white,
-    letterSpacing: 1,
-  },
-  recordingLabel: {
-    fontFamily: fonts.pixel,
-    fontSize: 7,
-    color: '#cc2200',
-    letterSpacing: 2,
-  },
-  audioReady: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  audioReadyText: {
-    fontFamily: fonts.pixel,
-    fontSize: 8,
-    color: colors.accent,
-    textShadowColor: colors.accent,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 6,
-  },
-  retakeText: {
-    fontFamily: fonts.pixel,
-    fontSize: 7,
-    color: colors.grey1,
-  },
-
   // Metadata
   metaBox: {
     backgroundColor: 'rgba(13,10,30,0.9)',

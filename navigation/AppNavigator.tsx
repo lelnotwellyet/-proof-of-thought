@@ -8,6 +8,9 @@ import MyThoughtsScreen from '../screens/MyThoughtsScreen';
 import FeedScreen from '../screens/FeedScreen';
 import WriteThoughtScreen from '../screens/WriteThoughtScreen';
 import ThoughtDetailScreen from '../screens/ThoughtDetailScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import PixelUserIcon from '../components/PixelUserIcon';
+import UsernameGate from '../components/UsernameGate';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -44,6 +47,7 @@ tabBarLabelStyle: {
         name="My Thoughts"
         component={MyThoughtsScreen}
         options={{
+          tabBarLabel: 'Thoughts',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="bulb" size={size} color={color} />
           ),
@@ -58,6 +62,14 @@ tabBarLabelStyle: {
           ),
         }}
       />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: 'Profile',
+          tabBarIcon: ({ color, size }) => <PixelUserIcon color={color} size={size} />,
+        }}
+      />
     </Tab.Navigator>
   );
 }
@@ -69,7 +81,9 @@ export default function AppNavigator() {
         <Stack.Screen name="Tabs" component={TabNavigator} />
         <Stack.Screen name="WriteThought" component={WriteThoughtScreen} />
         <Stack.Screen name="ThoughtDetail" component={ThoughtDetailScreen} />
+        <Stack.Screen name="UserProfile" component={ProfileScreen} />
       </Stack.Navigator>
+      <UsernameGate />
     </NavigationContainer>
   );
 }

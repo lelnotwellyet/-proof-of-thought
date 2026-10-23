@@ -33,6 +33,70 @@ export const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  syncBtn: {
+    borderWidth: 1,
+    borderColor: colors.accent,
+    backgroundColor: colors.accentDim,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    minWidth: 72,
+    alignItems: 'center',
+  },
+  syncBtnText: {
+    fontFamily: fonts.pixel,
+    fontSize: 7,
+    color: colors.accent,
+  },
+  liveText: {
+    fontFamily: fonts.pixel,
+    fontSize: 6,
+    color: colors.grey1,
+    marginTop: spacing.sm,
+  },
+  searchInput: {
+    fontFamily: fonts.mono,
+    fontSize: 13,
+    fontWeight: '900',
+    color: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: 'rgba(13,10,30,0.92)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginTop: spacing.md,
+  },
+  sortRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  sortLabel: {
+    fontFamily: fonts.pixel,
+    fontSize: 6,
+    color: colors.grey1,
+  },
+  sortChip: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 5,
+  },
+  sortChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryDim,
+  },
+  sortChipText: {
+    fontFamily: fonts.pixel,
+    fontSize: 6,
+    color: colors.grey1,
+  },
+  sortChipTextActive: { color: colors.primary },
   subtitle: {
     fontFamily: fonts.pixel,
     fontSize: 7,
@@ -94,6 +158,23 @@ export const styles = StyleSheet.create({
     textShadowColor: colors.accent,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 4,
+  },
+  ownerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: spacing.sm,
+  },
+  ownerLabel: {
+    fontFamily: fonts.pixel,
+    fontSize: 6,
+    color: colors.grey1,
+  },
+  ownerName: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    fontWeight: '900',
+    color: colors.primary,
   },
   cardDate: {
     fontFamily: fonts.mono,
@@ -169,6 +250,32 @@ export const styles = StyleSheet.create({
     textShadowColor: colors.accent,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 6,
+  },
+
+  tagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  verifiedTag: {
+    fontFamily: fonts.pixel,
+    fontSize: 6,
+    color: colors.accent,
+  },
+  loadMoreBtn: {
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryDim,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  loadMoreText: {
+    fontFamily: fonts.pixel,
+    fontSize: 8,
+    color: colors.primary,
+    letterSpacing: 1,
   },
 
   // Empty state

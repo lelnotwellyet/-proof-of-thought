@@ -1,31 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Alert,
   ImageBackground,
   Linking,
-  Modal,
   ScrollView,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { useAudioPlayer } from 'expo-audio';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import { publicKey as umiPublicKey } from '@metaplex-foundation/umi';
 import PixelCard from '../components/PixelCard';
 import PixelButton from '../components/PixelButton';
 import VerificationBadge from '../components/VerificationBadge';
 import { useWalletStore } from '../stores/walletStore';
 import { ThoughtData } from '../types/thought';
 import { verifyThoughtOnChain } from '../utils/verifyThought';
-import {
-  buyThought,
-  cancelListing,
-  createListing,
-  fetchListing,
-  fetchTokenOwner,
-  formatSol,
-} from '../utils/marketplace';
+import { getUmi } from '../utils/fetchThoughts';
+import BidPanel, { RoyaltyBadge } from '../components/BidPanel';
+import { BidRound, fetchBids } from '../utils/bidding';
+import { displayName, fetchUsernameDirectory } from '../utils/profile';
 import { styles } from './ThoughtDetailScreen.styles';
 
 export default function ThoughtDetailScreen() {
@@ -34,19 +28,14 @@ export default function ThoughtDetailScreen() {
   const thought = route.params?.thought as ThoughtData;
   const connection = useWalletStore((s) => s.connection);
   const publicKey = useWalletStore((s) => s.publicKey);
-  const signTransaction = useWalletStore((s) => s.signTransaction);
   const player = useAudioPlayer(thought?.audioUri || '');
   const [playing, setPlaying] = useState(false);
   const [verified, setVerified] = useState(false);
   const [pda, setPda] = useState(thought?.registryPda || '');
   const [checking, setChecking] = useState(true);
   const [owner, setOwner] = useState(thought?.currentOwner || '');
-  const [forSale, setForSale] = useState(!!thought?.isForSale);
-  const [priceSol, setPriceSol] = useState(thought?.priceSol);
-  const [seller, setSeller] = useState(thought?.sellerAddress || '');
-  const [listOpen, setListOpen] = useState(false);
-  const [priceInput, setPriceInput] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [round, setRound] = useState<BidRound | null | undefined>(undefined);
+  const [usernames, setUsernames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -66,110 +55,52 @@ export default function ThoughtDetailScreen() {
     };
   }, [connection, thought?.mintAddress, thought?.thought]);
 
+  const [syncing, setSyncing] = useState(false);
+
+  // Owner comes from DAS: getTokenLargestAccounts is heavily rate-limited on devnet.
+  const fetchOwner = async (mint: string): Promise<string | null> => {
+    try {
+      const asset = await getUmi().rpc.getAsset(umiPublicKey(mint));
+      return asset?.ownership?.owner?.toString() || null;
+    } catch {
+      return null;
+    }
+  };
+
   const loadMarket = async () => {
     if (!thought?.mintAddress) return;
-    const listing = await fetchListing(connection, thought.mintAddress);
-    if (listing) {
-      setForSale(true);
-      setPriceSol(listing.priceSol);
-      setSeller(listing.seller);
-      setOwner(listing.seller);
-      return;
-    }
-    const tokenOwner = await fetchTokenOwner(connection, thought.mintAddress);
-    setForSale(false);
-    setPriceSol(undefined);
-    setSeller('');
-    setOwner(tokenOwner || thought.currentOwner || thought.author || '');
-  };
-
-  useEffect(() => {
-    loadMarket().catch((err) => console.error('Market lookup failed:', err));
-  }, [connection, thought?.mintAddress]);
-
-  const wallet = publicKey ? { publicKey, signTransaction } : null;
-  const ownsIt = !!publicKey && owner === publicKey.toBase58();
-
-  const handleList = async () => {
-    if (!wallet || !thought) return;
-    const price = Number(priceInput);
-    setBusy(true);
-    try {
-      await createListing(wallet, connection, thought.mintAddress, price);
-      setListOpen(false);
-      setForSale(true);
-      setPriceSol(price);
-      setSeller(publicKey!.toBase58());
-      setOwner(publicKey!.toBase58());
-      Alert.alert('LISTED', `This thought is escrowed at ${formatSol(price)} SOL.`);
-    } catch (err) {
-      Alert.alert('LISTING FAILED', err instanceof Error ? err.message : 'Try again.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleBuy = () => {
-    if (!thought || priceSol == null) return;
-    if (!wallet) {
-      Alert.alert('NOT CONNECTED', 'Connect your wallet before buying.');
-      return;
-    }
-    Alert.alert('BUY IP RIGHTS', `Pay ${formatSol(priceSol)} SOL and take on-chain ownership?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Buy',
-        onPress: async () => {
-          setBusy(true);
-          try {
-            const signature = await buyThought(wallet, connection, {
-              ...thought,
-              sellerAddress: seller,
-              priceSol,
-              isForSale: true,
-            });
-            setForSale(false);
-            setPriceSol(undefined);
-            setSeller('');
-            setOwner(publicKey!.toBase58());
-            Alert.alert(
-              'OWNERSHIP TRANSFERRED',
-              'You are now the on-chain owner of this thought. View the transaction on Explorer.',
-              [
-                {
-                  text: 'Explorer',
-                  onPress: () =>
-                    Linking.openURL(`https://explorer.solana.com/tx/${signature}?cluster=devnet`),
-                },
-                { text: 'OK' },
-              ]
-            );
-          } catch (err) {
-            Alert.alert('PURCHASE FAILED', err instanceof Error ? err.message : 'Try again.');
-          } finally {
-            setBusy(false);
-          }
-        },
-      },
+    const [tokenOwner, bidRound, names] = await Promise.all([
+      fetchOwner(thought.mintAddress),
+      fetchBids(connection, thought.mintAddress).catch(() => null),
+      fetchUsernameDirectory(connection).catch(() => ({} as Record<string, string>)),
     ]);
+    if (tokenOwner) setOwner(tokenOwner);
+    else setOwner((prev) => prev || thought.currentOwner || thought.author || '');
+    setRound(bidRound);
+    if (Object.keys(names).length > 0) setUsernames(names);
   };
 
-  const handleCancel = async () => {
-    if (!wallet || !thought) return;
-    setBusy(true);
+  const syncNow = async () => {
+    setSyncing(true);
     try {
-      await cancelListing(wallet, connection, thought.mintAddress);
-      setForSale(false);
-      setPriceSol(undefined);
-      setSeller('');
-      setOwner(publicKey!.toBase58());
-      Alert.alert('LISTING CANCELLED', 'The NFT is back in your wallet.');
+      await loadMarket();
     } catch (err) {
-      Alert.alert('CANCEL FAILED', err instanceof Error ? err.message : 'Try again.');
+      console.error('Market lookup failed:', err);
     } finally {
-      setBusy(false);
+      setSyncing(false);
     }
   };
+
+  // Live while open: bids and ownership re-sync on focus and every 10s.
+  useFocusEffect(
+    useCallback(() => {
+      syncNow();
+      const id = setInterval(() => loadMarket().catch(() => {}), 10 * 1000);
+      return () => clearInterval(id);
+    }, [connection, thought?.mintAddress])
+  );
+
+  const ownsIt = !!publicKey && owner === publicKey.toBase58();
 
   const togglePlay = () => {
     if (playing) {
@@ -231,9 +162,19 @@ export default function ThoughtDetailScreen() {
         <Text style={styles.label}>// METADATA</Text>
         <PixelCard>
           <Text style={styles.metaKey}>AUTHOR</Text>
-          <Text style={styles.metaVal}>{thought.author || 'UNKNOWN'}</Text>
+          <Text
+            style={styles.metaVal}
+            onPress={() => thought.author && navigation.navigate('UserProfile', { wallet: thought.author })}
+          >
+            {thought.author ? `${displayName(thought.author, usernames[thought.author])}  ${thought.author}` : 'UNKNOWN'}
+          </Text>
           <Text style={styles.metaKey}>OWNER</Text>
-          <Text style={styles.metaVal}>{owner || 'UNKNOWN'}</Text>
+          <Text
+            style={styles.metaVal}
+            onPress={() => owner && navigation.navigate('UserProfile', { wallet: owner })}
+          >
+            {owner ? `${displayName(owner, usernames[owner])}  ${owner}` : 'UNKNOWN'}
+          </Text>
           <Text style={styles.metaKey}>MINT</Text>
           <Text style={styles.metaVal}>{thought.mintAddress}</Text>
           <Text style={styles.metaKey}>TIMESTAMP</Text>
@@ -242,43 +183,33 @@ export default function ThoughtDetailScreen() {
           </Text>
         </PixelCard>
 
-        {forSale && priceSol != null && (
-          <View style={[styles.saleBadge]}>
-            <Text style={styles.saleText}>[ FOR SALE: {formatSol(priceSol)} SOL ]</Text>
-          </View>
-        )}
+        <View style={styles.badgeRow}>
+          <RoyaltyBadge />
+        </View>
         {ownsIt && (
           <View style={[styles.saleBadge, styles.ownedBadge]}>
             <Text style={[styles.saleText, styles.ownedText]}>[ OWNED BY YOU ]</Text>
           </View>
         )}
 
-        {ownsIt && !forSale && (
-          <PixelButton
-            label="LIST FOR SALE"
-            variant="outline"
-            style={styles.action}
-            disabled={busy}
-            onPress={() => setListOpen(true)}
-          />
-        )}
-        {ownsIt && forSale && (
-          <PixelButton
-            label="CANCEL LISTING"
-            variant="outline"
-            style={styles.action}
-            loading={busy}
-            onPress={handleCancel}
-          />
-        )}
-        {!ownsIt && forSale && priceSol != null && (
-          <PixelButton
-            label={`BUY IP RIGHTS: ${formatSol(priceSol)} SOL`}
-            style={styles.action}
-            loading={busy}
-            onPress={handleBuy}
-          />
-        )}
+        <View style={styles.bidsHeader}>
+          <Text style={styles.label}>// BIDS · LIVE</Text>
+          <TouchableOpacity style={styles.syncBtn} onPress={syncNow} disabled={syncing}>
+            <Text style={styles.syncBtnText}>{syncing ? 'SYNCING...' : '↻ REFRESH'}</Text>
+          </TouchableOpacity>
+        </View>
+        <PixelCard>
+          {round === undefined ? (
+            <Text style={styles.pda}>SCANNING BIDS...</Text>
+          ) : (
+            <BidPanel
+              thought={{ ...thought, currentOwner: owner }}
+              round={round}
+              usernames={usernames}
+              onChanged={syncNow}
+            />
+          )}
+        </PixelCard>
 
         <PixelButton
           label="OPEN IN SOLANA EXPLORER"
@@ -291,36 +222,6 @@ export default function ThoughtDetailScreen() {
         />
       </ScrollView>
 
-      <Modal visible={listOpen} transparent animationType="fade" onRequestClose={() => setListOpen(false)}>
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Text style={styles.headerTitle}>LIST FOR SALE</Text>
-            <Text style={styles.label}>TYPE ANY PRICE IN SOL</Text>
-            <TextInput
-              style={styles.priceInput}
-              value={priceInput}
-              onChangeText={setPriceInput}
-              keyboardType="decimal-pad"
-              placeholder="e.g. 0.2"
-              placeholderTextColor="#6b5a3a"
-              autoFocus
-            />
-            <PixelButton
-              label={Number(priceInput) > 0 ? `LIST FOR ${priceInput} SOL` : 'ENTER A PRICE'}
-              onPress={handleList}
-              loading={busy}
-              disabled={!(Number(priceInput) > 0)}
-            />
-            <PixelButton
-              label="CLOSE"
-              variant="outline"
-              style={styles.action}
-              onPress={() => setListOpen(false)}
-              disabled={busy}
-            />
-          </View>
-        </View>
-      </Modal>
     </ImageBackground>
   );
 }
